@@ -1,0 +1,76 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Lucida Console', 'Lucida Sans Typewriter', monaco, 'Bitstream Vera Sans Mono', monospace;
+  color: #000;
+  padding: 25px;
+}
+
+h1 {
+  font-size: 32px;
+}
+
+small {
+  font-size: 14px;
+  color: #999;
+}
+
+#header {
+  margin: 0 0 25px 0;
+}
+
+#form {
+  width: 100%;
+  margin: 0 0 60px 0;
+}
+
+#form textarea {
+  width: 100%;
+  margin: 0 0 10px 0;
+  font-size: 12px;
+}
+
+#form label {
+  display: block;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+#form .form-group {
+  margin: 0 0 40px 0;
+}
+
+#output {
+  width: 100%;
+}
+
+#output .item {
+  padding: 10px;
+  background: #efefef;
+  width: 100%;
+  font-size: 12px;
+  margin: 0 0 20px 0;
+}
+
+#output textarea {
+  font-size: 12px;
+}
+
+#output .item time {
+  display: block;
+  font-size: 12px;
+  margin: 15px 0 0 0;
+  text-align: right;
+}
+
+#output {
+
+}
+
+#output img {
+  max-width: 500px;
+}

@@ -1,0 +1,15 @@
+{
+  "name": "filetobase64",
+  "version": "0.0.2",
+  "authors": [
+    "Miguel Mota <miguelmota2@gmail.com>"
+  ],
+  "description": "File object to base64 string",
+  "main": "filetobase64.js",
+  "keywords": [
+    "file",
+    "base64"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/miguelmota/filetobase64"
+}

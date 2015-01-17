@@ -1,6 +1,12 @@
 # Streamlet
 
-Nothing here yet
+Stream stuff.
+
+# Usage
+
+```javascript
+node server
+```
 
 # License
 

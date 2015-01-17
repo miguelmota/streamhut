@@ -33,11 +33,8 @@
     var byteChars = window.atob(base64);
     var byteArrays = [];
 
-    console.log('h1')
-
     for (var offset = 0, len = byteChars.length; offset < len; offset += sliceSize) {
       var slice = byteChars.slice(offset, offset + sliceSize);
-    console.log('e')
 
       var byteNumbers = new Array(slice.length);
       for (var i = 0; i < slice.length; i++) {
@@ -48,7 +45,6 @@
 
       byteArrays.push(byteArray);
     }
-    console.log('h2')
 
     return new Blob(byteArrays, {type: mime});
   }
@@ -18660,7 +18656,7 @@ stream.pipe(through(function(data) {
     a.target = '_blank';
     el.appendChild(a);
 
-    if (/data:image\/(png|jpg)/gi.test(data)) {
+    if (/data:image\/(png|jpe?g)/gi.test(data)) {
       var dv = create('div');
       var img = create('img');
       img.src = data;

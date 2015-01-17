@@ -62,7 +62,7 @@ stream.pipe(through(function(data) {
     a.target = '_blank';
     el.appendChild(a);
 
-    if (/data:image\/(png|jpg)/gi.test(data)) {
+    if (/data:image\/(png|jpe?g)/gi.test(data)) {
       var dv = create('div');
       var img = create('img');
       img.src = data;

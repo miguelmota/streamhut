@@ -1,59 +1,78 @@
-var fs = require('fs');
-var randomstring = require('randomstring');
-var shoe = require('shoe');
-var http = require('http');
-var _ = require('lodash');
-var through = require('through');
+const fs = require(`fs`);
+const randomstring = require(`randomstring`);
+const shoe = require(`shoe`);
+const http = require(`http`);
+const through = require(`through`);
 
 process.setMaxListeners(0);
 
-var clients = [];
+const ecstatic = require(`ecstatic`)(`${__dirname}/static`);
+const socks = {};
 
-var ecstatic = require('ecstatic')(__dirname + '/static');
+function callback(req, res) {
+  const path = req.url;
 
-var server = http.createServer(function(req, res) {
-  var path = req.url;
+  // index
   if (/^\/$/.test(path)) {
     res.writeHead(301, {
-      'Location': ['/', randomstring.generate(6)].join('')
+      Location: `/${randomstring.generate({
+        length: 3,
+        capitalization: `lowercase`
+      })}`
     });
     res.end();
     return;
   }
+
+  // assets
   if (/\.+/.test(path)) {
     ecstatic.apply(this, arguments);
   } else {
-    console.log(path);
-    var stream = fs.createReadStream(__dirname + '/static/index.html');
+    if (!socks[path]) {
+      socks[path] = createSock(path);
+    }
+
+    const stream = fs.createReadStream(`${__dirname}/static/index.html`);
     stream.pipe(res);
   }
-});
+}
 
-var sock = shoe(function (stream) {
-    stream.on('end', function () {
-      console.log('end');
-    });
-    stream.pipe(through(function(d) {
-      console.log('\n', d + '---');
-      _.each(clients, function(client) {
-          client.write(d);
+function createSock(path) {
+  const clients = [];
+  const sock = shoe(stream => {
+    stream
+    .pipe(through((data, bar) => {
+      //console.log(`\n${path}\n---${data}---`);
+      clients.forEach(client => {
+        console.log(`streaming to ${client.id} ${path}`);
+        client.write(data);
       });
-    }));
+    }))
+    .on(`end`, () => {
+      console.log(`end`);
+    });
 
-    stream.pipe(process.stdout, { end : false });
-});
-
-sock.on('connection', function(conn) {
-  clients.push(conn);
-  console.log('connected');
-  console.log(conn.remoteAddress);
-  console.log(conn.remotePort);
-  console.log(conn.id);
-  conn.on('close', function() {
-    console.log('close');
-    clients.splice(clients.indexOf(conn), 1);
+    //stream.pipe(process.stdout, {end:false});
   });
-});
 
-sock.install(server, '/s');
-server.listen(8956);
+  sock.on(`connection`, conn => {
+    clients.push(conn);
+    console.log(`connected ${conn.id} ${path}`);
+    conn.on(`close`, function() {
+      console.log(`close ${conn.id}`);
+      clients.splice(clients.indexOf(conn), 1);
+    });
+  });
+
+  sock.install(server, `${path}___`);
+
+  return sock;
+}
+
+
+const server = http.createServer(callback);
+const port = process.env.PORT || 8956;
+
+server.listen(port, () => {
+  console.log(`Listening on port ${port}`);
+});

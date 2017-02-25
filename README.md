@@ -1,13 +1,25 @@
 # Streamlet
 
-Stream stuff.
+> Stream stuff
 
-# Usage
+## Demo
 
-```javascript
-node server
+[http://streamlet.moogs.io](http://streamlet.moogs.io)
+
+## Usage
+
+Start server
+
+```bash
+npm start
 ```
 
-# License
+Build client
+
+```bash
+npm run build
+```
+
+## License
 
 MIT

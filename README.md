@@ -1,6 +1,6 @@
-# Streamlet
+# streamlet
 
-> Stream stuff
+> stream stuff
 
 ## Demo
 

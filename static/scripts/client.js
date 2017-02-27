@@ -84,8 +84,10 @@ stream.pipe(through(data => {
       el.appendChild(dv);
     }
   } else {
+    const d = create(`pre`);
     const t = create(`text`)(data);
-    el.appendChild(t);
+    d.appendChild(t);
+    el.appendChild(d);
   }
 
   el.appendChild(dt);

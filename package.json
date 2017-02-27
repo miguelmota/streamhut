@@ -16,7 +16,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "build": "browserify static/scripts/client.js > static/scripts/bundle.js"
+    "build": "browserify ./static/scripts/client.js > ./static/scripts/bundle.js",
+    "watch": "watchify ./static/scripts/client.js -o ./static/scripts/bundle.js"
   },
   "repository": {
     "type": "git",

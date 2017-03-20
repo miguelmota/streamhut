@@ -15,6 +15,14 @@ h1 {
   font-weight: normal;
 }
 
+input[type="text"],
+input[type="password"],
+input[type="file"],
+textarea {
+  border: 1px solid #777;
+  padding: 5px;
+}
+
 #header {
   margin: 0 0 25px 0;
 }
@@ -26,7 +34,7 @@ h1 {
 #header hgroup small {
   font-size: 9px;
   display: block;
-  margin-top: 10px;
+  margin: 10px 0 10px 0;
   color: #999;
 }
 
@@ -39,10 +47,15 @@ h1 {
   margin: 0 0 60px 0;
 }
 
-#form textarea {
+#form textarea,
+#form input[type="text"] {
   width: 100%;
   margin: 0 0 10px 0;
   font-size: 12px;
+}
+
+#form input[type="text"] {
+  margin: 0 0 10px 0;
 }
 
 #form label {
@@ -53,6 +66,12 @@ h1 {
 
 #form .form-group {
   margin: 0 0 40px 0;
+}
+
+#form button {
+  border: 1px solid #777;
+  padding: 10px 20px;
+  cursor: pointer;
 }
 
 #output {
@@ -71,14 +90,46 @@ h1 {
   font-size: 12px;
 }
 
+#output .item article {
+  margin: 10px 0 15px 0;
+  padding: 5px;
+}
+
+#output .item pre {
+  width: 100%;
+  overflow: auto;
+}
+
+#output .item footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+#output .item .download {
+ display: inline-flex;
+  align-items: flex-start;
+}
+
 #output .item time {
-  display: block;
+ display: inline-flex;
+  align-items: flex-end;
   font-size: 12px;
-  margin: 15px 0 0 0;
   text-align: right;
   color: #999;
 }
 
 #output img {
   max-width: 500px;
+}
+
+#output video {
+  width: 100%;
+  height: auto;
+  max-width: 500px;
+}
+
+#footer {
+  font-size: 12px;
+  padding: 20px 0;
+  text-align: right;
 }

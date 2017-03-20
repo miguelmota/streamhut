@@ -3,7 +3,6 @@ const through = require('through');
 const fileToBase64 = require('filetobase64');
 const base64Mime = require('base64mime');
 const base64ToBlob = require('base64toblob');
-const isBase64 = require('is-base64');
 
 const path = window.location.pathname;
 const stream = shoe(`${path}___`);
@@ -19,6 +18,10 @@ shareUrl.value = window.location.href;
 shareUrl.addEventListener(`click`, event => {
   event.currentTarget.select()
 }, false);
+
+function isBase64(text) {
+  return /data:/gi.test(text);
+}
 
 function create(type) {
   if (type === `text`) {

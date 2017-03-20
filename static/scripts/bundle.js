@@ -6606,29 +6606,6 @@ function config (name) {
 }).call(this);
 
 },{}],36:[function(require,module,exports){
-(function(root) {
-  'use strict';
-
-  function isBase64(v) {
-    var regex = /^(data:\w+\/[a-zA-Z\+\-\.]+;base64,)?([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/gi;
-    return regex.test(v);
-  }
-
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = isBase64;
-    }
-    exports.isBase64 = isBase64;
-  } else if (typeof define === 'function' && define.amd) {
-    define([], function() {
-      return isBase64;
-    });
-  } else {
-    root.isBase64 = isBase64;
-  }
-})(this);
-
-},{}],37:[function(require,module,exports){
 var Stream = require('stream');
 var sockjs = require('sockjs-client');
 var resolve = require('url').resolve;
@@ -6693,7 +6670,7 @@ module.exports = function (u, cb) {
     return stream;
 };
 
-},{"sockjs-client":38,"stream":28,"url":30}],38:[function(require,module,exports){
+},{"sockjs-client":37,"stream":28,"url":30}],37:[function(require,module,exports){
 /* SockJS client, version 0.3.1.7.ga67f.dirty, http://sockjs.org, MIT License
 
 Copyright (c) 2011-2012 VMware, Inc.
@@ -9018,7 +8995,7 @@ if (typeof module === 'object' && module && module.exports) {
 // [*] End of lib/all.js
 
 
-},{}],39:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 (function (process){
 var Stream = require('stream')
 
@@ -9130,13 +9107,12 @@ function through (write, end, opts) {
 
 
 }).call(this,require('_process'))
-},{"_process":12,"stream":28}],40:[function(require,module,exports){
+},{"_process":12,"stream":28}],39:[function(require,module,exports){
 const shoe = require('shoe');
 const through = require('through');
 const fileToBase64 = require('filetobase64');
 const base64Mime = require('base64mime');
 const base64ToBlob = require('base64toblob');
-const isBase64 = require('is-base64');
 
 const path = window.location.pathname;
 const stream = shoe(`${path}___`);
@@ -9152,6 +9128,10 @@ shareUrl.value = window.location.href;
 shareUrl.addEventListener(`click`, event => {
   event.currentTarget.select()
 }, false);
+
+function isBase64(text) {
+  return /data:/gi.test(text);
+}
 
 function create(type) {
   if (type === `text`) {
@@ -9284,4 +9264,4 @@ stream.on(`close`, () => {
   console.log(`connection closed`);
 });
 
-},{"base64mime":33,"base64toblob":34,"filetobase64":35,"is-base64":36,"shoe":37,"through":39}]},{},[40]);
+},{"base64mime":33,"base64toblob":34,"filetobase64":35,"shoe":36,"through":38}]},{},[39]);

@@ -9108,6 +9108,8 @@ function through (write, end, opts) {
 
 }).call(this,require('_process'))
 },{"_process":12,"stream":28}],39:[function(require,module,exports){
+'use strict';
+
 const shoe = require('shoe');
 const through = require('through');
 const fileToBase64 = require('filetobase64');

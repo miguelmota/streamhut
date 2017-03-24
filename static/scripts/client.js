@@ -1,3 +1,5 @@
+'use strict';
+
 const shoe = require('shoe');
 const through = require('through');
 const fileToBase64 = require('filetobase64');

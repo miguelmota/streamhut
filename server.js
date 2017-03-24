@@ -1,3 +1,5 @@
+'use strict';
+
 const fs = require(`fs`);
 const randomstring = require(`randomstring`);
 const shoe = require(`shoe`);
@@ -21,7 +23,7 @@ function callback(req, res) {
 
   // index
   if (/^\/$/.test(path)) {
-    let Location = null;
+    Location = null;
 
     // generate different path id if already being used
     do {

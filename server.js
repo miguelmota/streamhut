@@ -23,7 +23,7 @@ function callback(req, res) {
 
   // index
   if (/^\/$/.test(path)) {
-    Location = null;
+    let Location = null;
 
     // generate different path id if already being used
     do {

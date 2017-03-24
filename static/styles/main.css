@@ -13,6 +13,7 @@ body {
 h1 {
   font-size: 32px;
   font-weight: normal;
+  display: inline-block;
 }
 
 input[type="text"],
@@ -21,6 +22,16 @@ input[type="file"],
 textarea {
   border: 1px solid #777;
   padding: 5px;
+}
+
+#log {
+  width: 100%;
+  max-height: 120px;
+  color: #aaa;
+  overflow: auto;
+  font-size: 9px;
+  white-space: pre-wrap;
+  margin-bottom: 20px;
 }
 
 #header {
@@ -32,8 +43,8 @@ textarea {
 }
 
 #header hgroup small {
+  display: inline-block;
   font-size: 9px;
-  display: block;
   margin: 10px 0 10px 0;
   color: #999;
 }
@@ -105,8 +116,12 @@ textarea {
   justify-content: space-between;
 }
 
-#output .item .download {
- display: inline-flex;
+#output .item footer .download {
+  margin-right: 5px;
+}
+
+#output .item footer .left {
+  display: inline-flex;
   align-items: flex-start;
 }
 

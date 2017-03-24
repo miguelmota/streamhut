@@ -7,6 +7,7 @@ const base64ToBlob = require('base64toblob');
 const path = window.location.pathname;
 const stream = shoe(`${path}___`);
 
+const log = document.querySelector(`#log`);
 const form = document.querySelector(`#form`);
 const input = document.querySelector(`#input`);
 const text = document.querySelector(`#text`);
@@ -14,10 +15,25 @@ const file = document.querySelector(`#file`);
 const output = document.querySelector(`#output`);
 const shareUrl = document.querySelector(`#share-url`);
 
+function setClipboard(element) {
+  const client = new ZeroClipboard(element);
+
+  client.on(`copy`, event => {
+    element.textContent = `copied!`;
+    setTimeout(() => {
+      element.textContent = `copy`;
+    }, 3e3);
+  });
+}
+
 shareUrl.value = window.location.href;
 shareUrl.addEventListener(`click`, event => {
   event.currentTarget.select()
 }, false);
+
+function logMessage(data) {
+  log.innerHTML = JSON.stringify(data, null, 2);
+}
 
 function isBase64(text) {
   return /data:/gi.test(text);
@@ -60,6 +76,17 @@ file.addEventListener(`change`, event => {
 
 stream.pipe(through(data => {
   console.log(`incoming:`, data.substr(0,20).concat(`...`));
+
+  try {
+    const json = JSON.parse(data);
+    if (json.__server_message__) {
+      logMessage(json.__server_message__.data);
+      return false;
+    }
+  } catch(error) {
+
+  }
+
   const doc = document.createDocumentFragment();
   const el = create(`div`);
   el.classList.add(`item`);
@@ -88,11 +115,14 @@ stream.pipe(through(data => {
 
   const a = create(`a`);
   a.appendChild(create(`text`)(url));
+  a.title = `view asset`;
   a.href = url;
   a.target = `_blank`;
   doc.appendChild(a);
 
   const dv = create(`article`);
+
+  let clipboardNode = null;
 
   if (/image/gi.test(mime)) {
     const img = create(`img`);
@@ -112,11 +142,15 @@ stream.pipe(through(data => {
   } else if (/(json|javascript|text)/gi.test(mime)) {
     const t = isBase64(data) ? atob(data.replace(/.*base64,/gi, ``)) : data;
     const pr = create(`pre`);
+    pr.id = `id_${Date.now()}`;
+    clipboardNode = pr;
     const tt = create(`text`)(t);
     pr.appendChild(tt);
     dv.appendChild(pr);
   } else {
     const pr = create(`pre`);
+    pr.id = `id_${Date.now()}`;
+    clipboardNode = pr;
     const t = create(`text`)(data);
     pr.appendChild(t);
     dv.appendChild(pr);
@@ -127,14 +161,28 @@ stream.pipe(through(data => {
   const filename = `${Date.now()}_${ext}`;
   const dla = create(`a`);
   dla.className = `download`;
+  dla.title = `download asset`;
   dla.href = url;
   dla.download = filename;
   const dlat = create(`text`)(`download`);
   dla.appendChild(dlat);
 
   const btd = create(`footer`);
+  const btdl = create(`div`);
+  btdl.appendChild(dla)
+  btd.appendChild(btdl)
 
-  btd.appendChild(dla)
+  if (clipboardNode) {
+    const cp = create(`a`);
+    cp.href='#'
+    cp.className = `copy`;
+    cp.title = `copy to clipboard`;
+    cp.dataset.clipboardTarget = clipboardNode.id;
+    const cpt = create(`text`)(`copy`);
+    setClipboard(cp);
+    cp.appendChild(cpt);
+    btdl.appendChild(cp)
+  }
 
   const dt = create(`time`);
   const dtt = create(`text`)((new Date()).toString());

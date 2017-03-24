@@ -27,7 +27,7 @@ function callback(req, res) {
 
     // generate different path id if already being used
     do {
-      randString = genRandString();
+      const randString = genRandString();
       Location = `/${randString}`;
     } while (socks[Location] && socks[Location].clients.length);
 

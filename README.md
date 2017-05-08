@@ -2,10 +2,6 @@
 
 > stream stuff
 
-## Demo
-
-[http://streamlet.moogs.io](http://streamlet.moogs.io)
-
 ## Usage
 
 Start server

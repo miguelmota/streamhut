@@ -13,7 +13,9 @@
     "shoe": "^0.0.15",
     "through": "^2.3.6"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "watchify": "^3.9.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",

@@ -18,7 +18,7 @@ function genRandString() {
   });
 }
 
-function callback(req, res) {
+function serverCallback(req, res) {
   const path = req.url;
 
   // index
@@ -47,6 +47,10 @@ function callback(req, res) {
     const stream = fs.createReadStream(`${__dirname}/static/index.html`);
     stream.pipe(res);
   }
+}
+
+function wsCallback(req, res) {
+  res.send();
 }
 
 function createSock(path) {
@@ -95,16 +99,23 @@ function createSock(path) {
     });
   });
 
-  sock.install(server, `${path}___`);
+  sock.install(wsServer, `${path}___`);
   sock.clients = clients;
 
   return sock;
 }
 
 
-const server = http.createServer(callback);
+const server = http.createServer(serverCallback);
 const port = process.env.PORT || 8956;
 
 server.listen(port, () => {
   console.log(`Listening on port ${port}`);
+});
+
+const wsServer = http.createServer(wsCallback);
+const wsPort = 8957;
+
+wsServer.listen(wsPort, () => {
+  console.log(`Websocket listening on port ${wsPort}`);
 });

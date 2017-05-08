@@ -9149,7 +9149,7 @@ const base64Mime = require('base64mime');
 const base64ToBlob = require('base64toblob');
 
 const {pathname, host, protocol}  = window.location;
-const stream = shoe(`${protocol}//${host}/ws/${pathname}___`);
+const stream = shoe(`${protocol}//${host}${pathname}___`);
 
 const log = document.querySelector(`#log`);
 const form = document.querySelector(`#form`);

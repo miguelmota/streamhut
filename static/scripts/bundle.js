@@ -9148,9 +9148,8 @@ const fileToBase64 = require('filetobase64');
 const base64Mime = require('base64mime');
 const base64ToBlob = require('base64toblob');
 
-const wsPort = 8957;
-const {pathname, hostname, protocol}  = window.location;
-const stream = shoe(`${protocol}//${hostname}:8957${pathname}___`);
+const {pathname, host, protocol}  = window.location;
+const stream = shoe(`${protocol}//${host}/ws/${pathname}___`);
 
 const log = document.querySelector(`#log`);
 const form = document.querySelector(`#form`);

@@ -106,10 +106,14 @@ textarea {
   padding: 5px;
 }
 
-#output .item pre {
+#output .item pre,
+#output .item code {
   width: 100%;
   overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
+
 
 #output .item footer {
   display: flex;

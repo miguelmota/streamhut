@@ -8,6 +8,7 @@
     "base64toblob": "^0.0.1",
     "ecstatic": "^0.5.5",
     "filetobase64": "^0.0.3",
+    "hyperlinkify": "0.0.3",
     "is-base64": "0.0.2",
     "randomstring": "^1.0.3",
     "shoe": "^0.0.15",

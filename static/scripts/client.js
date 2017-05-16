@@ -5,6 +5,7 @@ const through = require('through');
 const fileToBase64 = require('filetobase64');
 const base64Mime = require('base64mime');
 const base64ToBlob = require('base64toblob');
+const hyperlinkify = require('hyperlinkify');
 
 const {pathname, host, protocol}  = window.location;
 const stream = shoe(`${protocol}//${host}${pathname}___`);
@@ -143,18 +144,17 @@ stream.pipe(through(data => {
     dv.appendChild(aud);
   } else if (/(json|javascript|text)/gi.test(mime)) {
     const t = isBase64(data) ? atob(data.replace(/.*base64,/gi, ``)) : data;
-    const pr = create(`pre`);
+    const pr = create(`code`);
     pr.id = `id_${Date.now()}`;
     clipboardNode = pr;
-    const tt = create(`text`)(t);
-    pr.appendChild(tt);
+    pr.innerHTML = hyperlinkify(t, {target: '_blank'});
     dv.appendChild(pr);
   } else {
-    const pr = create(`pre`);
+    const pr = create(`code`);
     pr.id = `id_${Date.now()}`;
     clipboardNode = pr;
-    const t = create(`text`)(data);
-    pr.appendChild(t);
+    pr.innerHTML = hyperlinkify(data, {target: '_blank'});
+    dv.appendChild(pr);
     dv.appendChild(pr);
   }
 

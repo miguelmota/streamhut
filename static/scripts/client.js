@@ -14,7 +14,7 @@ const log = document.querySelector(`#log`);
 const form = document.querySelector(`#form`);
 const input = document.querySelector(`#input`);
 const text = document.querySelector(`#text`);
-const file = document.querySelector(`#file`);
+const fileInput = document.querySelector(`#file`);
 const output = document.querySelector(`#output`);
 const shareUrl = document.querySelector(`#share-url`);
 
@@ -56,6 +56,7 @@ function create(type) {
 form.addEventListener(`submit`, event => {
   event.preventDefault();
 
+  // text stream
   [text, input].forEach(x => {
     const value = x.value;
     if (value) {
@@ -64,17 +65,19 @@ form.addEventListener(`submit`, event => {
       x.value = ``;
     }
   })
-}, false);
 
-file.addEventListener(`change`, event => {
-  const file = event.currentTarget.files[0];
-  console.log(`file:`, file);
-  if (!file) return;
+  // file upload
+  const files = [].slice.call(fileInput.files)
 
-  fileToBase64(file, base64 => {
-    console.log(`base64:${base64.substr(0,20).concat(`...`)}`);
-    stream.write(`data:${file.type};base64,${base64}`);
-  });
+  files.forEach(file => {
+    console.log(`file:`, file);
+    if (!file) return;
+
+    fileToBase64(file, base64 => {
+      console.log(`base64:${base64.substr(0,20).concat(`...`)}`);
+      stream.write(`data:${file.type};base64,${base64}`);
+    });
+  })
 }, false);
 
 stream.pipe(through(data => {

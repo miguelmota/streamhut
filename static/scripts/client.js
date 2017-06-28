@@ -152,12 +152,14 @@ stream.pipe(through(data => {
     clipboardNode = pr;
     pr.innerHTML = hyperlinkify(t, {target: '_blank'});
     dv.appendChild(pr);
+  } else if (/zip/gi.test(mime)) {
+    const pr = create(`text`)('.zip');
+    dv.appendChild(pr);
   } else {
     const pr = create(`code`);
     pr.id = `id_${Date.now()}`;
     clipboardNode = pr;
     pr.innerHTML = hyperlinkify(data, {target: '_blank'});
-    dv.appendChild(pr);
     dv.appendChild(pr);
   }
 

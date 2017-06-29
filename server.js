@@ -4,13 +4,7 @@ const fs = require(`fs`)
 const randomstring = require(`randomstring`)
 const http = require(`http`)
 const WebSocket = require('ws')
-const keccak = require('keccakjs')
-
-function sha3(data) {
-  const hash = new keccak(256)
-  hash.update(data)
-  return hash.digest('hex')
-}
+const uuid = require('uuid/v4')
 
 process.setMaxListeners(0)
 
@@ -65,7 +59,7 @@ function createSock(path) {
 
   sock.on(`connection`, conn => {
     if (!conn.id) {
-      conn.id = sha3(`${clients.length + 1}_${Date.now()}_${Math.random()}`)
+      conn.id = uuid()
     }
 
     clients.push(conn)

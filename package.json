@@ -13,9 +13,8 @@
     "filetobase64": "^0.0.3",
     "hyperlinkify": "0.0.3",
     "is-base64": "0.0.2",
-    "js-sha3": "^0.6.0",
-    "keccakjs": "^0.2.1",
     "randomstring": "^1.0.3",
+    "uuid": "^3.1.0",
     "ws": "^3.0.0"
   },
   "devDependencies": {

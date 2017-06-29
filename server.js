@@ -1,76 +1,76 @@
-'use strict';
+'use strict'
 
-const fs = require(`fs`);
-const randomstring = require(`randomstring`);
-const http = require(`http`);
-const WebSocket = require('ws');
-const SHA3Lib = require('sha3');
+const fs = require(`fs`)
+const randomstring = require(`randomstring`)
+const http = require(`http`)
+const WebSocket = require('ws')
+const keccak = require('keccakjs')
 
 function sha3(data) {
-  const d = new SHA3Lib.SHA3Hash(256);
-  d.update(data);
-  return d.digest('hex');
+  const hash = new keccak(256)
+  hash.update(data)
+  return hash.digest('hex')
 }
 
-process.setMaxListeners(0);
+process.setMaxListeners(0)
 
-const ecstatic = require(`ecstatic`)(`${__dirname}/static`);
-const socks = {};
+const ecstatic = require(`ecstatic`)(`${__dirname}/static`)
+const socks = {}
 
 function genRandString() {
   return randomstring.generate({
     length: 3,
     capitalization: `lowercase`
-  });
+  })
 }
 
 function callback(req, res) {
-  const path = req.url;
+  const path = req.url
 
   // index
   if (/^\/$/.test(path)) {
-    let Location = null;
+    let Location = null
 
     // generate different path id if already being used
     do {
-      const randString = genRandString();
-      Location = `/${randString}`;
-    } while (socks[Location] && socks[Location]._clients.length);
+      const randString = genRandString()
+      Location = `/${randString}`
+    } while (socks[Location] && socks[Location]._clients.length)
 
-    res.writeHead(301, {Location});
-    res.end();
-    return;
+    res.writeHead(301, {Location})
+    res.end()
+    return
   }
 
   // assets
   if (/\.+/.test(path)) {
-    ecstatic.apply(this, arguments);
+    ecstatic.apply(this, arguments)
   } else {
     if (!socks[path]) {
-      socks[path] = createSock(path);
+      socks[path] = createSock(path)
     }
 
-    const stream = fs.createReadStream(`${__dirname}/static/index.html`);
-    stream.pipe(res);
+    const stream = fs.createReadStream(`${__dirname}/static/index.html`)
+    stream.pipe(res)
   }
 }
 
 function createSock(path) {
-  const clients = [];
+  const clients = []
 
   const sock = new WebSocket.Server({
     server,
     path
-  });
+  })
 
   sock.on(`connection`, conn => {
     if (!conn.id) {
       conn.id = sha3(`${clients.length + 1}_${Date.now()}_${Math.random()}`)
     }
 
-    clients.push(conn);
+    clients.push(conn)
 
-    console.log(`connected ${conn.id} ${path}`);
+    console.log(`connected ${conn.id} ${path}`)
 
     const sendConnections = () => {
       clients.forEach(client => {
@@ -81,49 +81,49 @@ function createSock(path) {
             connections: clients.filter(x => (x.id !== client.id))
             .map(x => ({id: x.id}))
           }
-        }}));
-      });
+        }}))
+      })
     }
 
-    sendConnections();
+    sendConnections()
 
     conn.on('message', data => {
-      console.log('received: %s', data);
-      //console.log(`\n${path}\n---${data}---`);
+      console.log('received: %s', data)
+      //console.log(`\n${path}\n---${data}---`)
       clients.forEach(client => {
-        console.log(`streaming to ${client.id} ${path}`);
-        client.send(data);
-      });
-    });
+        console.log(`streaming to ${client.id} ${path}`)
+        client.send(data)
+      })
+    })
 
     conn.on(`close`, function() {
-      console.log(`close ${conn.id}`);
+      console.log(`close ${conn.id}`)
 
       const index = clients.reduce((index, client, i) => {
         if (conn.id === client.id) {
-          return i;
+          return i
         }
 
         return index
       }, -1)
 
       if (index > -1) {
-        clients.splice(index, 1);
+        clients.splice(index, 1)
       }
 
-      sendConnections();
-    });
-  });
+      sendConnections()
+    })
+  })
 
-  sock._clients = clients;
+  sock._clients = clients
 
-  return sock;
+  return sock
 }
 
 
-const server = http.createServer(callback);
-const port = process.env.PORT || 8956;
+const server = http.createServer(callback)
+const port = process.env.PORT || 8956
 
 server.listen(port, () => {
-  console.log(`Listening on port ${port}`);
-});
+  console.log(`Listening on port ${port}`)
+})

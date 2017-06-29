@@ -81,7 +81,12 @@ node_modules
 
 # Bower #
 #####################
-#bower_components
+bower_components
+
+# Vim files to ignore #
+#######################
+.VimballRecord
+.netrwhist
 
 # Folders to ignore #
 #####################
@@ -97,7 +102,6 @@ _archive
 uploads
 tmp
 
-# Vim files to ignore #
-#######################
-.VimballRecord
-.netrwhist
+# Files to ignore #
+###################
+cli.js

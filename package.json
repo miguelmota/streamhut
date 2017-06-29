@@ -1,8 +1,11 @@
 {
-  "name": "streamlet",
+  "name": "streamhut",
   "version": "0.0.1",
   "description": "Stream stuff",
   "main": "server.js",
+  "bin": {
+    "btc-dash": "bin/index.js"
+  },
   "dependencies": {
     "base64mime": "^0.0.1",
     "base64toblob": "^0.0.1",
@@ -11,8 +14,8 @@
     "hyperlinkify": "0.0.3",
     "is-base64": "0.0.2",
     "randomstring": "^1.0.3",
-    "shoe": "^0.0.15",
-    "through": "^2.3.6"
+    "sha3": "^1.2.0",
+    "ws": "^3.0.0"
   },
   "devDependencies": {
     "watchify": "^3.9.0"
@@ -25,15 +28,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/miguelmota/streamlet"
+    "url": "https://github.com/miguelmota/streamhut"
   },
   "keywords": [
     "stream"
   ],
-  "author": "Miguel Mota <hello@miguelmota.com> (http://www.miguelmota.com/)",
+  "author": {
+    "name": "Miguel Mota",
+    "email": "hello@miguelmota.com",
+    "url": "https://miguelmota.com/"
+  },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/miguelmota/streamlet/issues"
+    "url": "https://github.com/miguelmota/streamhut/issues"
   },
-  "homepage": "https://github.com/miguelmota/streamlet"
+  "homepage": "https://github.com/miguelmota/streamhut"
 }

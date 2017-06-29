@@ -1,14 +1,12 @@
 'use strict';
 
-const shoe = require('shoe');
-const through = require('through');
 const fileToBase64 = require('filetobase64');
 const base64Mime = require('base64mime');
 const base64ToBlob = require('base64toblob');
 const hyperlinkify = require('hyperlinkify');
 
 const {pathname, host, protocol}  = window.location;
-const stream = shoe(`${protocol}//${host}${pathname}___`);
+const ws = new WebSocket(`${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`);
 
 const log = document.querySelector(`#log`);
 const form = document.querySelector(`#form`);
@@ -61,7 +59,7 @@ form.addEventListener(`submit`, event => {
     const value = x.value;
     if (value) {
       //console.log(`value`, value);
-      stream.write(value);
+      ws.send(value);
       x.value = ``;
     }
   })
@@ -75,12 +73,14 @@ form.addEventListener(`submit`, event => {
 
     fileToBase64(file, base64 => {
       console.log(`base64:${base64.substr(0,20).concat(`...`)}`);
-      stream.write(`data:${file.type};base64,${base64}`);
+      ws.send(`data:${file.type};base64,${base64}`);
     });
   })
 }, false);
 
-stream.pipe(through(data => {
+ws.addEventListener('message', event => {
+  const data = event.data;
+
   console.log(`incoming:`, data.substr(0,20).concat(`...`));
 
   try {
@@ -199,12 +199,12 @@ stream.pipe(through(data => {
 
   el.appendChild(doc);
   output.insertBefore(el, output.firstChild);
-}));
+});
 
-stream.on(`connect`, () => {
+ws.addEventListener(`open`, () => {
   console.log(`connected`);
 });
 
-stream.on(`close`, () => {
+ws.addEventListener(`close`, () => {
   console.log(`connection closed`);
 });

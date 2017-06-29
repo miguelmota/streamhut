@@ -2,9 +2,15 @@
 
 const fs = require(`fs`);
 const randomstring = require(`randomstring`);
-const shoe = require(`shoe`);
 const http = require(`http`);
-const through = require(`through`);
+const WebSocket = require('ws');
+const SHA3Lib = require('sha3');
+
+function sha3(data) {
+  const d = new SHA3Lib.SHA3Hash(256);
+  d.update(data);
+  return d.digest('hex');
+}
 
 process.setMaxListeners(0);
 
@@ -29,7 +35,7 @@ function callback(req, res) {
     do {
       const randString = genRandString();
       Location = `/${randString}`;
-    } while (socks[Location] && socks[Location].clients.length);
+    } while (socks[Location] && socks[Location]._clients.length);
 
     res.writeHead(301, {Location});
     res.end();
@@ -51,36 +57,29 @@ function callback(req, res) {
 
 function createSock(path) {
   const clients = [];
-  const sock = shoe(stream => {
-    stream
-    .pipe(through((data, bar) => {
-      //console.log(`\n${path}\n---${data}---`);
-      clients.forEach(client => {
-        console.log(`streaming to ${client.id} ${path}`);
-        client.write(data);
-      });
-    }))
-    .on(`end`, () => {
-      console.log(`end`);
-    });
 
-    //stream.pipe(process.stdout, {end:false});
+  const sock = new WebSocket.Server({
+    server,
+    path
   });
 
   sock.on(`connection`, conn => {
+    if (!conn.id) {
+      conn.id = sha3(`${clients.length + 1}_${Date.now()}_${Math.random()}`)
+    }
+
     clients.push(conn);
+
     console.log(`connected ${conn.id} ${path}`);
 
     const sendConnections = () => {
       clients.forEach(client => {
-        client.write(JSON.stringify({
+        client.send(JSON.stringify({
           __server_message__: {
           data: {
-            connectionId: conn.id,
-            connections: clients.map(client => {
-              return {id: client.id}
-            })
-            .filter(x => (x.id !== conn.id))
+            connectionId: client.id,
+            connections: clients.filter(x => (x.id !== client.id))
+            .map(x => ({id: x.id}))
           }
         }}));
       });
@@ -88,15 +87,35 @@ function createSock(path) {
 
     sendConnections();
 
+    conn.on('message', data => {
+      console.log('received: %s', data);
+      //console.log(`\n${path}\n---${data}---`);
+      clients.forEach(client => {
+        console.log(`streaming to ${client.id} ${path}`);
+        client.send(data);
+      });
+    });
+
     conn.on(`close`, function() {
       console.log(`close ${conn.id}`);
-      clients.splice(clients.indexOf(conn), 1);
+
+      const index = clients.reduce((index, client, i) => {
+        if (conn.id === client.id) {
+          return i;
+        }
+
+        return index
+      }, -1)
+
+      if (index > -1) {
+        clients.splice(index, 1);
+      }
+
       sendConnections();
     });
   });
 
-  sock.install(server, `${path}___`);
-  sock.clients = clients;
+  sock._clients = clients;
 
   return sock;
 }

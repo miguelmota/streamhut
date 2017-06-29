@@ -1,4 +1,4 @@
-# streamlet
+# streamhut
 
 > stream stuff
 

@@ -40,84 +40,78 @@ function callback(req, res) {
   if (/\.+/.test(path)) {
     ecstatic.apply(this, arguments)
   } else {
-    if (!socks[path]) {
-      socks[path] = createSock(path)
-    }
-
     const stream = fs.createReadStream(`${__dirname}/static/index.html`)
     stream.pipe(res)
   }
 }
 
-function createSock(path) {
-  const clients = []
+function createSock(conn, path, clients=[]) {
+  if (!conn.id) {
+    conn.id = uuid()
+  }
 
-  const sock = new WebSocket.Server({
-    server,
-    path
+  clients.push(conn)
+
+  console.log(`connected ${conn.id} ${path}`)
+
+  const sendConnections = () => {
+    clients.forEach(client => {
+      client.send(JSON.stringify({
+        __server_message__: {
+        data: {
+          connectionId: client.id,
+          connections: clients.filter(x => (x.id !== client.id))
+          .map(x => ({id: x.id}))
+        }
+      }}))
+    })
+  }
+
+  sendConnections()
+
+  conn.on('message', data => {
+    console.log('received: %s', data)
+    //console.log(`\n${path}\n---${data}---`)
+    clients.forEach(client => {
+      console.log(`streaming to ${client.id} ${path}`)
+      client.send(data)
+    })
   })
 
-  sock.on(`connection`, conn => {
-    if (!conn.id) {
-      conn.id = uuid()
-    }
+  conn.on(`close`, function() {
+    console.log(`close ${conn.id}`)
 
-    clients.push(conn)
+    const index = clients.reduce((index, client, i) => {
+      if (conn.id === client.id) {
+        return i
+      }
 
-    console.log(`connected ${conn.id} ${path}`)
+      return index
+    }, -1)
 
-    const sendConnections = () => {
-      clients.forEach(client => {
-        client.send(JSON.stringify({
-          __server_message__: {
-          data: {
-            connectionId: client.id,
-            connections: clients.filter(x => (x.id !== client.id))
-            .map(x => ({id: x.id}))
-          }
-        }}))
-      })
+    if (index > -1) {
+      clients.splice(index, 1)
     }
 
     sendConnections()
-
-    conn.on('message', data => {
-      console.log('received: %s', data)
-      //console.log(`\n${path}\n---${data}---`)
-      clients.forEach(client => {
-        console.log(`streaming to ${client.id} ${path}`)
-        client.send(data)
-      })
-    })
-
-    conn.on(`close`, function() {
-      console.log(`close ${conn.id}`)
-
-      const index = clients.reduce((index, client, i) => {
-        if (conn.id === client.id) {
-          return i
-        }
-
-        return index
-      }, -1)
-
-      if (index > -1) {
-        clients.splice(index, 1)
-      }
-
-      sendConnections()
-    })
   })
 
-  sock._clients = clients
-
-  return sock
+  return clients
 }
-
 
 const server = http.createServer(callback)
 const port = process.env.PORT || 8956
 
 server.listen(port, () => {
   console.log(`Listening on port ${port}`)
+})
+
+const sock = new WebSocket.Server({
+  server
+})
+
+sock.on(`connection`, (conn, IncMsg) => {
+  const path = IncMsg.url
+
+  socks[path] = createSock(conn, path, socks[path])
 })

@@ -4,10 +4,11 @@
   "description": "Stream stuff",
   "main": "server.js",
   "bin": {
-    "btc-dash": "bin/index.js"
+    "streamhut": "bin/streamhut.js"
   },
   "dependencies": {
     "arraybuffer-mime": "0.0.1",
+    "commander": "^2.10.0",
     "ecstatic": "^0.5.5",
     "hyperlinkify": "0.0.3",
     "randomstring": "^1.0.3",

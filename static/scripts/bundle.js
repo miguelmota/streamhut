@@ -988,7 +988,7 @@ form.addEventListener(`submit`, event => {
   const files = [].slice.call(fileInput.files)
 
   files.forEach(file => {
-    console.log(`file:`, file)
+    console.log(`file:`, file, file.type)
     if (!file) return
 
     const reader = new FileReader()
@@ -1016,7 +1016,6 @@ ws.addEventListener('message', event => {
   const data = event.data
 
   console.log('incoming...')
-  console.log(data)
 
   try {
     const json = JSON.parse(data)
@@ -1033,6 +1032,8 @@ ws.addEventListener('message', event => {
   el.classList.add(`item`)
 
   const {mime, arrayBuffer} = arrayBufferMimeDecouple(data)
+
+  console.log('received', mime)
 
   const blob = new Blob([arrayBuffer], {type: mime})
 

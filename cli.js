@@ -1,11 +1,16 @@
+const fs = require('fs')
 const program = require('commander')
+const WebSocket = require('ws')
 const {
   arrayBufferWithMime,
   arrayBufferMimeDecouple
 } = require('arraybuffer-mime')
-const WebSocket = require('ws')
 
 const packageJson = require('./package.json')
+
+const art = fs.readFileSync('./hut.txt', 'utf8')
+
+console.log(art)
 
 program
   .version(packageJson.version)
@@ -14,8 +19,13 @@ program
   .option('-c, --channel <id>', 'channel ID', null, null)
   .option('-t, --text <text>', 'text to send', null, null)
   .option('-f, --file <filepath>', 'file to send', null, null)
-  .command('post', 'post to a channel')
-  .command('listen', 'listen on a channel')
+  .usage(`<cmd> [options]
+
+  Commands:
+
+    post [options]\tpost to a channel
+    listen [options]\tlisten on a channel`)
+  .arguments('<cmd>')
   .action((cmd) => {
     const {
       host,
@@ -26,7 +36,7 @@ program
     } = program
 
     if (!host || !channel) {
-      program.outputHelp()
+      program.help()
       return false
     }
 
@@ -37,17 +47,29 @@ program
         notSecure
       })
     } else if (cmd === 'post') {
+      post({
+        channel,
+        host,
+        notSecure,
+        text,
+        file
+      })
     }
   })
+  .parse(process.argv)
 
-program.parse(process.argv)
+if (!program.args.length) {
+  program.help()
+  return false
+}
 
 function listen(props) {
-  const ws = new WebSocket(constructWebsocketUrl(props))
+  const url = constructWebsocketUrl(props)
+  const ws = new WebSocket(url)
   ws.binaryType = 'arraybuffer'
 
   ws.on('open', () => {
-    console.log('connected.')
+    console.log(`connected to ${url}\n`)
   })
 
   ws.on('error', (error) => {
@@ -63,7 +85,7 @@ function listen(props) {
       // check mime type
       var str = buffer.toString('utf8')
       if (str) {
-        console.log(`received ${new Date()}:`)
+        console.log(`received ${new Date()}:\n`)
         console.log(str)
       }
     }
@@ -71,18 +93,20 @@ function listen(props) {
 }
 
 function post(props) {
-  const {host, channel, notSecure} = props
-  const scheme = notSecure ? 'ws' : 'wss'
+  const {text, file} = props
 
+  const url = constructWebsocketUrl(props)
 
-  const ws = new WebSocket(constructWebsocketUrl(props))
+  const ws = new WebSocket(url)
   ws.binaryType = 'arraybuffer'
 
   ws.on('open', () => {
+    console.log(`posting data to ${url}:\n\n`, text)
     const mime = 'text/plain'
-    const arrayBuffer = str2ab('yabababb')
+    const arrayBuffer = str2ab(text)
     const abWithMime = arrayBufferWithMime(arrayBuffer, mime)
     ws.send(abWithMime)
+    ws.close()
   })
 
   ws.on('error', (error) => {

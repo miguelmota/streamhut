@@ -7,12 +7,9 @@
     "btc-dash": "bin/index.js"
   },
   "dependencies": {
-    "base64mime": "^0.0.1",
-    "base64toblob": "^0.0.1",
+    "arraybuffer-mime": "0.0.1",
     "ecstatic": "^0.5.5",
-    "filetobase64": "^0.0.3",
     "hyperlinkify": "0.0.3",
-    "is-base64": "0.0.2",
     "randomstring": "^1.0.3",
     "uuid": "^3.1.0",
     "ws": "^3.0.0"

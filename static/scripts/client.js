@@ -1,66 +1,75 @@
-'use strict';
+'use strict'
 
-const fileToBase64 = require('filetobase64');
-const base64Mime = require('base64mime');
-const base64ToBlob = require('base64toblob');
-const hyperlinkify = require('hyperlinkify');
+const hyperlinkify = require('hyperlinkify')
+const {
+  arrayBufferWithMime,
+  arrayBufferMimeDecouple
+} = require('arraybuffer-mime')
 
-const {pathname, host, protocol}  = window.location;
-const ws = new WebSocket(`${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`);
+const {pathname, host, protocol}  = window.location
+const ws = new WebSocket(`${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`)
 
-const log = document.querySelector(`#log`);
-const form = document.querySelector(`#form`);
-const input = document.querySelector(`#input`);
-const text = document.querySelector(`#text`);
-const fileInput = document.querySelector(`#file`);
-const output = document.querySelector(`#output`);
-const shareUrl = document.querySelector(`#share-url`);
+ws.binaryType = 'arraybuffer'
+
+const log = document.querySelector(`#log`)
+const form = document.querySelector(`#form`)
+const input = document.querySelector(`#input`)
+const text = document.querySelector(`#text`)
+const fileInput = document.querySelector(`#file`)
+const output = document.querySelector(`#output`)
+const shareUrl = document.querySelector(`#share-url`)
 
 function setClipboard(element) {
-  const client = new ZeroClipboard(element);
+  const client = new ZeroClipboard(element)
 
   client.on(`copy`, event => {
-    element.textContent = `copied!`;
+    element.textContent = `copied!`
     setTimeout(() => {
-      element.textContent = `copy`;
-    }, 3e3);
-  });
+      element.textContent = `copy`
+    }, 3e3)
+  })
 }
 
-shareUrl.value = window.location.href;
+shareUrl.value = window.location.href
 shareUrl.addEventListener(`click`, event => {
   event.currentTarget.select()
-}, false);
+}, false)
 
 function logMessage(data) {
-  log.innerHTML = JSON.stringify(data, null, 2);
-}
-
-function isBase64(text) {
-  return /data:/gi.test(text);
+  log.innerHTML = JSON.stringify(data, null, 2)
 }
 
 function create(type) {
   if (type === `text`) {
     return text => {
-      const t = document.createTextNode(text);
-      return t;
-    };
+      const t = document.createTextNode(text)
+      return t
+    }
   }
 
-  return document.createElement(type);
+  return document.createElement(type)
 }
 
 form.addEventListener(`submit`, event => {
-  event.preventDefault();
+  event.preventDefault()
 
   // text stream
-  [text, input].forEach(x => {
-    const value = x.value;
+  const inputs = [text, input]
+  inputs.forEach(x => {
+    const value = x.value
     if (value) {
-      //console.log(`value`, value);
-      ws.send(value);
-      x.value = ``;
+      //console.log(`value`, value)
+      const mime = 'text/plain'
+      const blob = new Blob([value], {type: mime})
+      const reader = new FileReader()
+
+      reader.addEventListener('load', (event) => {
+        const arrayBuffer = reader.result
+        sendArrayBuffer(arrayBuffer, mime)
+      })
+
+      reader.readAsArrayBuffer(blob)
+      x.value = ``
     }
   })
 
@@ -68,143 +77,150 @@ form.addEventListener(`submit`, event => {
   const files = [].slice.call(fileInput.files)
 
   files.forEach(file => {
-    console.log(`file:`, file);
-    if (!file) return;
+    console.log(`file:`, file)
+    if (!file) return
 
-    fileToBase64(file, base64 => {
-      console.log(`base64:${base64.substr(0,20).concat(`...`)}`);
-      ws.send(`data:${file.type};base64,${base64}`);
-    });
+    const reader = new FileReader()
+
+    const readFile = (event) => {
+      const arrayBuffer = reader.result
+      const mime = file.type
+      sendArrayBuffer(arrayBuffer, mime)
+    }
+
+    reader.addEventListener('load', readFile)
+    reader.readAsArrayBuffer(file)
   })
-}, false);
+
+  fileInput.value = ''
+
+}, false)
+
+function sendArrayBuffer(arrayBuffer, mime) {
+  const abWithMime = arrayBufferWithMime(arrayBuffer, mime)
+  ws.send(abWithMime)
+}
 
 ws.addEventListener('message', event => {
-  const data = event.data;
+  const data = event.data
 
-  console.log(`incoming:`, data.substr(0,20).concat(`...`));
+  console.log('incoming...')
+  console.log(data)
 
   try {
-    const json = JSON.parse(data);
+    const json = JSON.parse(data)
     if (json.__server_message__) {
-      logMessage(json.__server_message__.data);
-      return false;
+      logMessage(json.__server_message__.data)
+      return false
     }
   } catch(error) {
 
   }
 
-  const doc = document.createDocumentFragment();
-  const el = create(`div`);
-  el.classList.add(`item`);
+  const doc = document.createDocumentFragment()
+  const el = create(`div`)
+  el.classList.add(`item`)
 
-  let mime = null;
-  let blob = null;
-  let dd = data;
+  const {mime, arrayBuffer} = arrayBufferMimeDecouple(data)
 
-  if (/data:/gi.test(data)) {
-    const d1 = data.substr(0,32).replace(/.*base64,/gi, ``);
-    const d2 = data.substr(32, data.length - 1);
-    dd = d1.concat(d2);
-    mime = base64Mime(data) || ``;
-    blob = base64ToBlob(dd, mime);
-  } else {
-    mime = `text/plain`;
-    blob = new Blob([data], {type: mime});
-  }
+  const blob = new Blob([arrayBuffer], {type: mime})
 
-  let ext = mime.split(`/`).join(`_`).replace(/[^\w\d_]/gi, ``);
-  const url = window.URL.createObjectURL(blob);
+  let ext = mime.split(`/`).join(`_`).replace(/[^\w\d_]/gi, ``)
+  const url = window.URL.createObjectURL(blob)
 
-  const tpd = create(`div`);
-  tpd.appendChild(create(`text`)(`${blob.type} size:${blob.size}B`));
-  doc.appendChild(tpd);
+  const tpd = create(`div`)
+  tpd.appendChild(create(`text`)(`${blob.type} size:${blob.size}B`))
+  doc.appendChild(tpd)
 
-  const a = create(`a`);
-  a.appendChild(create(`text`)(url));
-  a.title = `view asset`;
-  a.href = url;
-  a.target = `_blank`;
-  doc.appendChild(a);
+  const a = create(`a`)
+  a.appendChild(create(`text`)(url))
+  a.title = `view asset`
+  a.href = url
+  a.target = `_blank`
+  doc.appendChild(a)
 
-  const dv = create(`article`);
+  const dv = create(`article`)
 
-  let clipboardNode = null;
+  let clipboardNode = null
 
   if (/image/gi.test(mime)) {
-    const img = create(`img`);
-    img.src = data;
-    dv.appendChild(img);
+    const img = create(`img`)
+    img.src = url
+    dv.appendChild(img)
   } else if (/video/gi.test(mime)) {
-    const dv = create(`div`);
-    const vid = create(`video`);
-    vid.src = url;
-    vid.controls = `controls`;
-    dv.appendChild(vid);
+    const dv = create(`div`)
+    const vid = create(`video`)
+    vid.src = url
+    vid.controls = `controls`
+    dv.appendChild(vid)
   } else if (/audio/gi.test(mime)) {
-    const aud = create(`audio`);
-    aud.src = url;
-    aud.controls = `controls`;
-    dv.appendChild(aud);
-  } else if (/(json|javascript|text)/gi.test(mime)) {
-    const t = isBase64(data) ? atob(data.replace(/.*base64,/gi, ``)) : data;
-    const pr = create(`code`);
-    pr.id = `id_${Date.now()}`;
-    clipboardNode = pr;
-    pr.innerHTML = hyperlinkify(t, {target: '_blank'});
-    dv.appendChild(pr);
+    const aud = create(`audio`)
+    aud.src = url
+    aud.controls = `controls`
+    dv.appendChild(aud)
   } else if (/zip/gi.test(mime)) {
-    const pr = create(`text`)('.zip');
-    dv.appendChild(pr);
+    const pr = create(`text`)('.zip')
+    dv.appendChild(pr)
+  } else if (/pdf/gi.test(mime)) {
+    const pr = create(`text`)('.pdf')
+    dv.appendChild(pr)
+  //} else if (/(json|javascript|text)/gi.test(mime)) {
   } else {
-    const pr = create(`code`);
-    pr.id = `id_${Date.now()}`;
-    clipboardNode = pr;
-    pr.innerHTML = hyperlinkify(data, {target: '_blank'});
-    dv.appendChild(pr);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const t = reader.result
+      const pr = create(`code`)
+      pr.id = `id_${Date.now()}`
+      clipboardNode = pr
+      pr.innerHTML = hyperlinkify(t, {target: '_blank'})
+      dv.appendChild(pr)
+    }
+
+    reader.readAsText(blob)
   }
 
-  doc.appendChild(dv);
+  doc.appendChild(dv)
 
-  const filename = `${Date.now()}_${ext}`;
-  const dla = create(`a`);
-  dla.className = `download`;
-  dla.title = `download asset`;
-  dla.href = url;
-  dla.download = filename;
-  const dlat = create(`text`)(`download`);
-  dla.appendChild(dlat);
+  const filename = `${Date.now()}_${ext}`
+  const dla = create(`a`)
+  dla.className = `download`
+  dla.title = `download asset`
+  dla.href = url
+  dla.download = filename
+  const dlat = create(`text`)(`download`)
+  dla.appendChild(dlat)
 
-  const btd = create(`footer`);
-  const btdl = create(`div`);
+  const btd = create(`footer`)
+  const btdl = create(`div`)
   btdl.appendChild(dla)
   btd.appendChild(btdl)
 
   if (clipboardNode) {
-    const cp = create(`a`);
+    const cp = create(`a`)
     cp.href='#'
-    cp.className = `copy`;
-    cp.title = `copy to clipboard`;
-    cp.dataset.clipboardTarget = clipboardNode.id;
-    const cpt = create(`text`)(`copy`);
-    setClipboard(cp);
-    cp.appendChild(cpt);
+    cp.className = `copy`
+    cp.title = `copy to clipboard`
+    cp.dataset.clipboardTarget = clipboardNode.id
+    const cpt = create(`text`)(`copy`)
+    setClipboard(cp)
+    cp.appendChild(cpt)
     btdl.appendChild(cp)
   }
 
-  const dt = create(`time`);
-  const dtt = create(`text`)((new Date()).toString());
-  dt.appendChild(dtt);
+  const dt = create(`time`)
+  const dtt = create(`text`)((new Date()).toString())
+  dt.appendChild(dtt)
   btd.appendChild(dt)
-  doc.appendChild(btd);
+  doc.appendChild(btd)
 
-  el.appendChild(doc);
-  output.insertBefore(el, output.firstChild);
-});
+  el.appendChild(doc)
+  output.insertBefore(el, output.firstChild)
+})
 
 ws.addEventListener(`open`, () => {
-  console.log(`connected`);
-});
+  console.log(`connected`)
+})
 
 ws.addEventListener(`close`, () => {
-  console.log(`connection closed`);
-});
+  console.log(`connection closed`)
+})

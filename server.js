@@ -70,7 +70,8 @@ function createSock(conn, path, clients=[]) {
   sendConnections()
 
   conn.on('message', data => {
-    console.log('received: %s', data)
+    console.log('received data')
+    //console.log('received: %s', data)
     //console.log(`\n${path}\n---${data}---`)
     clients.forEach(client => {
       console.log(`streaming to ${client.id} ${path}`)

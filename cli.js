@@ -55,7 +55,7 @@ program
         host,
         notSecure,
         text,
-        file
+        filepath: file
       })
     } else {
       showHelp()
@@ -103,19 +103,36 @@ function listen(props) {
 }
 
 function post(props) {
-  const {text, file} = props
+  const {text, filepath} = props
 
   const url = constructWebsocketUrl(props)
 
   const ws = new WebSocket(url)
   ws.binaryType = 'arraybuffer'
 
+  const send = (arrayBuffer) => {
+    ws.send(arrayBuffer)
+  }
+
   ws.on('open', () => {
-    console.log(`posting data to ${url}:\n\n${text}\n`)
-    const mime = 'text/plain'
-    const arrayBuffer = str2ab(text)
-    const abWithMime = arrayBufferWithMime(arrayBuffer, mime)
-    ws.send(abWithMime)
+    if (text) {
+      console.log(`posting data to ${url}:\n\n${text}\n`)
+      const mime = 'text/plain'
+      const arrayBuffer = str2ab(text)
+      const abWithMime = arrayBufferWithMime(arrayBuffer, mime)
+      send(abWithMime)
+    }
+
+    if (filepath) {
+      console.log(`posting file data to ${url}:\n\n${filepath}\n`)
+      const data = fs.readFileSync(filepath, 'utf8')
+
+      const mime = 'text/plain'
+      const arrayBuffer = str2ab(data)
+      const abWithMime = arrayBufferWithMime(arrayBuffer, mime)
+      send(abWithMime)
+    }
+
     ws.close()
   })
 

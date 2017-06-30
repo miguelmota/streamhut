@@ -121,6 +121,16 @@ hello
 
 ```
 
+Posting file data to a channel
+
+```bash
+$ streamhut post -h streamhut.net -c yo -f hello.txt
+posting data to wss://streamhut.net/yo:
+
+hello.txt
+
+```
+
 ## Test
 
 ```bash

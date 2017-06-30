@@ -10,7 +10,10 @@ const packageJson = require('./package.json')
 
 const art = fs.readFileSync('./hut.txt', 'utf8')
 
-console.log(art)
+if (process.argv.indexOf('--help') > -1 &&
+  process.argv.length === 3) {
+  console.log(art)
+}
 
 program
   .version(packageJson.version)
@@ -36,7 +39,7 @@ program
     } = program
 
     if (!host || !channel) {
-      program.help()
+      showHelp()
       return false
     }
 
@@ -54,13 +57,20 @@ program
         text,
         file
       })
+    } else {
+      showHelp()
     }
   })
   .parse(process.argv)
 
 if (!program.args.length) {
-  program.help()
+  showHelp()
   return false
+}
+
+function showHelp() {
+  console.log(art)
+  program.help()
 }
 
 function listen(props) {
@@ -101,7 +111,7 @@ function post(props) {
   ws.binaryType = 'arraybuffer'
 
   ws.on('open', () => {
-    console.log(`posting data to ${url}:\n\n`, text)
+    console.log(`posting data to ${url}:\n\n${text}\n`)
     const mime = 'text/plain'
     const arrayBuffer = str2ab(text)
     const abWithMime = arrayBufferWithMime(arrayBuffer, mime)

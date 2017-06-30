@@ -2,24 +2,49 @@
 
 > stream stuff
 
+- Nothing is stored; only streamed.
+- Originally created this to quickly share data and files between devices.
+- Path names map to channels.
+- Anyone in the same channel can view what's streamed.
+
+[https://streamhut.net](https://streamhut.net)
+
 ## Usage
 
 Start server
 
 ```bash
-npm start
+$ npm start
+
+Listening on port 8956
 ```
 
-Build client
+Start server on specific port
 
 ```bash
-npm run build
+$ PORT=8080 npm start
+
+Listening on port 8080
+```
+
+## Development
+
+Watch and build client scripts
+
+```bash
+$ npm run watch
+```
+
+Build client scripts
+
+```bash
+$ npm run build
 ```
 
 ## CLI
 
 ```bash
-npm install -g streamhut
+$ npm install -g streamhut
 ```
 
 ```bash
@@ -68,6 +93,34 @@ $ streamhut -help
     -c, --channel <id>     channel ID
     -t, --text <text>      text to send
     -f, --file <filepath>  file to send
+```
+
+Listening on a channel
+
+```bash
+$ streamhut listen -h streamhut.net -c yo
+connected to wss://streamhut.net/yo
+
+received Fri Jun 30 2017 14:40:14 GMT-0700 (PDT):
+
+hello
+
+```
+
+Posting text data to a channel
+
+```bash
+$ streamhut post -h streamhut.net -c yo -t "hello"
+posting data to wss://streamhut.net/yo:
+
+hello
+
+```
+
+## Test
+
+```bash
+npm test
 ```
 
 ## License

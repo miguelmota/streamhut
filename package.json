@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "arraybuffer-mime": "0.0.1",
+    "clipboard": "^1.7.1",
     "commander": "^2.10.0",
     "ecstatic": "^0.5.5",
     "hyperlinkify": "0.0.3",
@@ -19,7 +20,7 @@
     "watchify": "^3.9.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo 'TODO'",
     "start": "node server.js",
     "build": "browserify ./static/scripts/client.js > ./static/scripts/bundle.js",
     "watch": "watchify ./static/scripts/client.js -o ./static/scripts/bundle.js"

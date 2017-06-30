@@ -43,9 +43,13 @@ $ npm run build
 
 ## CLI
 
+Install
+
 ```bash
 $ npm install -g streamhut
 ```
+
+Help
 
 ```bash
 $ streamhut -help

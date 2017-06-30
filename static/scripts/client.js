@@ -1,6 +1,5 @@
-'use strict'
-
 const hyperlinkify = require('hyperlinkify')
+const Clipboard = require('clipboard')
 const {
   arrayBufferWithMime,
   arrayBufferMimeDecouple
@@ -20,13 +19,19 @@ const output = document.querySelector(`#output`)
 const shareUrl = document.querySelector(`#share-url`)
 
 function setClipboard(element) {
-  const client = new ZeroClipboard(element)
+  const clipboard = new Clipboard(element)
 
-  client.on(`copy`, event => {
-    element.textContent = `copied!`
-    setTimeout(() => {
-      element.textContent = `copy`
+  clipboard.on('success', function(event) {
+    const target = event.trigger
+    target.textContent = 'copied!'
+
+    setTimeout(function() {
+      target.textContent = 'copy'
     }, 3e3)
+  })
+
+  element.addEventListener('click', event => {
+    event.preventDefault()
   })
 }
 
@@ -175,6 +180,17 @@ ws.addEventListener('message', event => {
       clipboardNode = pr
       pr.innerHTML = hyperlinkify(t, {target: '_blank'})
       dv.appendChild(pr)
+
+      const cp = create(`a`)
+      cp.id = `cp_id_${Date.now()}`
+      cp.href='#'
+      cp.className = `copy`
+      cp.title = `copy to clipboard`
+      cp.dataset.clipboardTarget = `#${clipboardNode.id}`
+      const cpt = create(`text`)(`copy`)
+      setClipboard(cp)
+      cp.appendChild(cpt)
+      btdl.appendChild(cp)
     }
 
     reader.readAsText(blob)
@@ -195,18 +211,6 @@ ws.addEventListener('message', event => {
   const btdl = create(`div`)
   btdl.appendChild(dla)
   btd.appendChild(btdl)
-
-  if (clipboardNode) {
-    const cp = create(`a`)
-    cp.href='#'
-    cp.className = `copy`
-    cp.title = `copy to clipboard`
-    cp.dataset.clipboardTarget = clipboardNode.id
-    const cpt = create(`text`)(`copy`)
-    setClipboard(cp)
-    cp.appendChild(cpt)
-    btdl.appendChild(cp)
-  }
 
   const dt = create(`time`)
   const dtt = create(`text`)((new Date()).toString())

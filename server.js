@@ -137,13 +137,15 @@ const netServer = net.createServer((socket) => {
     socket.id = uuid()
   }
 
-  const info = socket.address()
-  const address = info.address.split(':').splice(-1, 1)
-
   const path = getRandUnusedPath()
   netConnections[path] = socket
 
-  const url = `Streaming to: http://${address}:${port}${path}`
+  const info = socket.address()
+  const address = info.address.split(':').splice(-1, 1)
+  const port = info.port
+  const hostUrl = process.env.HOST_URL || `http://${address}:${port}`
+
+  const url = `Streaming to: ${hostUrl}${path}`
 
   socket.write(`${url}\n`)
 

@@ -1,6 +1,6 @@
 # streamhut
 
-> stream stuff
+> Stream and send data, terminal to web and vice versa.
 
 - Nothing is stored; only streamed.
 - Originally created this to quickly share data and files between devices.

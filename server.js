@@ -4,7 +4,11 @@ const fs = require(`fs`)
 const randomstring = require(`randomstring`)
 const http = require(`http`)
 const WebSocket = require('ws')
+const net = require('net')
 const uuid = require('uuid/v4')
+const {
+  arrayBufferWithMime,
+} = require('arraybuffer-mime')
 
 process.setMaxListeners(0)
 
@@ -18,18 +22,24 @@ function genRandString() {
   })
 }
 
+function getRandUnusedPath() {
+  let location = null
+
+  // generate different path id if already being used
+  do {
+    const randString = genRandString()
+    location = `/${randString}`
+  } while (socks[location])
+
+  return location
+}
+
 function callback(req, res) {
   const path = req.url
 
   // index
   if (/^\/$/.test(path)) {
-    let Location = null
-
-    // generate different path id if already being used
-    do {
-      const randString = genRandString()
-      Location = `/${randString}`
-    } while (socks[Location] && socks[Location]._clients.length)
+    const Location = getRandUnusedPath()
 
     res.writeHead(301, {Location})
     res.end()
@@ -115,4 +125,42 @@ sock.on(`connection`, (conn, IncMsg) => {
   const path = IncMsg.url
 
   socks[path] = createSock(conn, path, socks[path])
+})
+
+const netPort = process.env.NET_PORT || 8957
+
+const netConnections = {}
+
+// netcat server
+const netServer = net.createServer((socket) => {
+  if (!socket.id) {
+    socket.id = uuid()
+  }
+
+  const info = socket.address()
+  const address = info.address.split(':').splice(-1, 1)
+
+  const path = getRandUnusedPath()
+  netConnections[path] = socket
+
+  const url = `Streaming to: http://${address}:${port}${path}`
+
+  socket.write(`${url}\n`)
+
+  socket.on('data', (buffer) => {
+    const clients = socks[path]
+
+    if (clients) {
+      clients.forEach(client => {
+        console.log(`streaming to ${client.id} ${path}`)
+        const mime = 'shell'
+        const abWithMime = arrayBufferWithMime(buffer.buffer, mime)
+        client.send(abWithMime)
+      })
+    }
+  })
+})
+
+netServer.listen(netPort, () => {
+  console.log(`Net server listening on port ${netPort}`)
 })

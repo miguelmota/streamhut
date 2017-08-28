@@ -152,3 +152,7 @@ textarea {
   padding: 20px 0;
   text-align: right;
 }
+
+#terminal {
+  margin-bottom: 20px;
+}

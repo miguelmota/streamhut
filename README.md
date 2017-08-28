@@ -27,20 +27,6 @@ $ PORT=8080 npm start
 Listening on port 8080
 ```
 
-## Development
-
-Watch and build client scripts
-
-```bash
-$ npm run watch
-```
-
-Build client scripts
-
-```bash
-$ npm run build
-```
-
 ## CLI
 
 Install
@@ -129,6 +115,26 @@ posting data to wss://streamhut.net/yo:
 
 hello.txt
 
+```
+
+Pipe realtime stdout to streamhut using [`netcat`](https://en.wikipedia.org/wiki/Netcat)
+
+```bash
+while true; do date; sleep 1; done | nc 127.0.0.1 8957
+```
+
+## Development
+
+Watch and build client scripts
+
+```bash
+$ npm run watch
+```
+
+Build client scripts
+
+```bash
+$ npm run build
 ```
 
 ## Test

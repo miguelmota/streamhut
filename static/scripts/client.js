@@ -4,6 +4,7 @@ const {
   arrayBufferWithMime,
   arrayBufferMimeDecouple
 } = require('arraybuffer-mime')
+const Terminal = require('xterm')
 
 const {pathname, host, protocol}  = window.location
 const ws = new WebSocket(`${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`)
@@ -17,6 +18,8 @@ const text = document.querySelector(`#text`)
 const fileInput = document.querySelector(`#file`)
 const output = document.querySelector(`#output`)
 const shareUrl = document.querySelector(`#share-url`)
+
+let term = null
 
 function setClipboard(element) {
   const clipboard = new Clipboard(element)
@@ -128,6 +131,23 @@ ws.addEventListener('message', event => {
   const {mime, arrayBuffer} = arrayBufferMimeDecouple(data)
 
   console.log('received', mime)
+
+  if (mime === 'shell') {
+    if (!term) {
+      term = new Terminal()
+      termNode = document.getElementById('terminal')
+      term.open(termNode)
+    }
+
+    const blob = new Blob([arrayBuffer], {type: 'text/plain'})
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = reader.result
+      term.write(`${text}\r`)
+    }
+    reader.readAsText(blob)
+    return false
+  }
 
   const blob = new Blob([arrayBuffer], {type: mime})
 

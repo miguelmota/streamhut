@@ -1,6 +1,6 @@
 {
   "name": "streamhut",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Stream stuff",
   "main": "server.js",
   "bin": {
@@ -14,7 +14,8 @@
     "hyperlinkify": "0.0.3",
     "randomstring": "^1.0.3",
     "uuid": "^3.1.0",
-    "ws": "^3.0.0"
+    "ws": "^3.0.0",
+    "xterm": "^2.9.2"
   },
   "devDependencies": {
     "watchify": "^3.9.0"

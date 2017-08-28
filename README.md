@@ -85,7 +85,7 @@ $ streamhut -help
     -f, --file <filepath>  file to send
 ```
 
-Listening on a channel
+**Listening on a channel**
 
 ```bash
 $ streamhut listen -h streamhut.net -c yo
@@ -97,7 +97,7 @@ hello
 
 ```
 
-Posting text data to a channel
+**Posting text data to a channel**
 
 ```bash
 $ streamhut post -h streamhut.net -c yo -t "hello"
@@ -107,7 +107,7 @@ hello
 
 ```
 
-Posting file data to a channel
+**Posting file data to a channel**
 
 ```bash
 $ streamhut post -h streamhut.net -c yo -f hello.txt
@@ -117,11 +117,14 @@ hello.txt
 
 ```
 
-Pipe realtime stdout to streamhut using [`netcat`](https://en.wikipedia.org/wiki/Netcat)
+**Pipe realtime stdout to streamhut xterm using [`netcat`](https://en.wikipedia.org/wiki/Netcat)**
 
 ```bash
-while true; do date; sleep 1; done | nc 127.0.0.1 8957
+$ while true; do date; sleep 1; done | nc streamhut.net 1337
+Streaming to: https://streamhut.net/dsa
 ```
+
+<img src="./screenshots/netcat.gif" width="500">
 
 ## Development
 

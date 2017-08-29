@@ -144,7 +144,6 @@ function start(props = {}) {
 
     const info = socket.address()
     const address = info.address.split(':').splice(-1, 1)
-    const port = info.port
     const hostUrl = process.env.HOST_URL || `http://${address}:${port}`
 
     const url = `Streaming to: ${hostUrl}${pathname}`

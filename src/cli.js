@@ -1,4 +1,5 @@
 const fs = require('fs')
+const path = require('path')
 const program = require('commander')
 const WebSocket = require('ws')
 const {
@@ -6,9 +7,10 @@ const {
   arrayBufferMimeDecouple
 } = require('arraybuffer-mime')
 
-const packageJson = require('./package.json')
+const { start } = require('./server')
+const packageJson = require('../package.json')
 
-const art = fs.readFileSync('./hut.txt', 'utf8')
+const art = fs.readFileSync(path.resolve(__dirname, 'hut.txt'), 'utf8')
 
 if (process.argv.indexOf('--help') > -1 &&
   process.argv.length === 3) {
@@ -17,8 +19,9 @@ if (process.argv.indexOf('--help') > -1 &&
 
 program
   .version(packageJson.version)
-  .option('-h, --host <host>', 'host URL', null, null)
-  .option('--not-secure', 'not using SSL.', null, false)
+  .option('-h, --host <host>', 'host name', null, null)
+  .option('-p, --port <port>', 'host port', null, null)
+  .option('-n, --not-secure', 'not using SSL.', null, false)
   .option('-c, --channel <id>', 'channel ID', null, null)
   .option('-t, --text <text>', 'text to send', null, null)
   .option('-f, --file <filepath>', 'file to send', null, null)
@@ -27,32 +30,43 @@ program
   Commands:
 
     post [options]\tpost to a channel
-    listen [options]\tlisten on a channel`)
+    listen [options]\tlisten on a channel
+    server [options]\tstart a streamhut server`)
   .arguments('<cmd>')
   .action((cmd) => {
     const {
       host,
+      port,
       notSecure,
       channel,
       text,
       file
     } = program
 
-    if (!host || !channel) {
-      showHelp()
-      return false
-    }
+    if (cmd === 'server') {
+      start({
+        port
+      })
+    } else if (cmd === 'listen') {
+      if (!host || !channel) {
+        return showHelp()
+      }
 
-    if (cmd === 'listen') {
       listen({
         channel,
         host,
+        port,
         notSecure
       })
     } else if (cmd === 'post') {
+      if (!host || !channel) {
+        return showHelp()
+      }
+
       post({
         channel,
         host,
+        port,
         notSecure,
         text,
         filepath: file
@@ -65,15 +79,21 @@ program
 
 if (!program.args.length) {
   showHelp()
-  return false
+  process.exit(0)
 }
 
-function showHelp() {
+function showHelp () {
   console.log(art)
   program.help()
 }
 
-function listen(props) {
+function startServer (props) {
+  const port = props.port
+
+  server.start(port)
+}
+
+function listen (props) {
   const url = constructWebsocketUrl(props)
   const ws = new WebSocket(url)
   ws.binaryType = 'arraybuffer'
@@ -102,7 +122,7 @@ function listen(props) {
   })
 }
 
-function post(props) {
+function post (props) {
   const {text, filepath} = props
 
   const url = constructWebsocketUrl(props)
@@ -138,13 +158,13 @@ function post(props) {
 
   ws.on('error', (error) => {
     if (/400|ECONNREFUSED/gi.test(error.message)) {
-      console.error('no on is listening on ', path)
+      console.error('no one is listening on ', path)
     }
   })
 }
 
-function constructWebsocketUrl(props) {
-  const {host, channel, notSecure} = props
+function constructWebsocketUrl (props) {
+  const {host, port, channel, notSecure} = props
   const scheme = notSecure ? 'ws' : 'wss'
 
   if (!host || !channel) {
@@ -152,21 +172,21 @@ function constructWebsocketUrl(props) {
     return false
   }
 
-  const path = (channel||'').replace(/^\/?/, '/')
+  const path = (channel || '').replace(/^\/?/, '/')
 
-  return `${scheme}://${host}${path}`
+  return `${scheme}://${host}${port ? `:${port}` : ''}${path}`
 }
 
-//https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
-function str2ab(str) {
-  var buf = new ArrayBuffer(str.length*2) // 2 bytes for each char
+// https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
+function str2ab (str) {
+  var buf = new ArrayBuffer(str.length * 2) // 2 bytes for each char
   var bufView = new Uint16Array(buf)
-  for (var i=0, strLen=str.length; i<strLen; i++) {
+  for (var i = 0, strLen = str.length; i < strLen; i++) {
     bufView[i] = str.charCodeAt(i)
   }
   return buf
 }
 
-function isArrayBuffer(data) {
+function isArrayBuffer (data) {
   return /ArrayBuffer/gi.test(Object.prototype.toString.call(data))
 }

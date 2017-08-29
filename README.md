@@ -71,21 +71,23 @@ $ streamhut -help
 
   Commands:
 
-    post [options]	post to a channel
-    listen [options]	listen on a channel
+    post [options]      post to a channel
+    listen [options]    listen on a channel
+    server [options]    start a streamhut server
 
   Options:
 
     -h, --help             output usage information
     -V, --version          output the version number
-    -h, --host <host>      host URL
-    --not-secure           not using SSL.
+    -h, --host <host>      host name
+    -p, --port <port>      host port
+    -n, --not-secure       not using SSL.
     -c, --channel <id>     channel ID
     -t, --text <text>      text to send
-    -f, --file <filepath>  file to send
+
 ```
 
-**Listening on a channel**
+**Listening on a channel:**
 
 ```bash
 $ streamhut listen -h streamhut.net -c yo
@@ -97,27 +99,25 @@ hello
 
 ```
 
-**Posting text data to a channel**
+**Posting text data to a channel:**
 
 ```bash
 $ streamhut post -h streamhut.net -c yo -t "hello"
 posting data to wss://streamhut.net/yo:
 
 hello
-
 ```
 
-**Posting file data to a channel**
+**Posting file data to a channel:**
 
 ```bash
 $ streamhut post -h streamhut.net -c yo -f hello.txt
 posting data to wss://streamhut.net/yo:
 
 hello.txt
-
 ```
 
-**Pipe realtime stdout to streamhut xterm using [`netcat`](https://en.wikipedia.org/wiki/Netcat)**
+**Pipe realtime stdout to streamhut xterm using [`netcat`](https://en.wikipedia.org/wiki/Netcat):**
 
 ```bash
 $ while true; do date; sleep 1; done | nc streamhut.net 1337
@@ -125,6 +125,21 @@ Streaming to: https://streamhut.net/dsa
 ```
 
 <img src="./screenshots/netcat.gif" width="500">
+
+**Starting a streamhut server on localhost:**
+
+```bash
+$ streamhut server -p 1336
+HTTP/WebSocket server on port: 1336
+                  Netcat port: 1337
+```
+
+Then specify local host and port to connect:
+
+```bash
+$ streamhut listen -h 127.0.0.1 -p 1336 -n -c yo
+connected to ws://127.0.0.1:1336/yo
+```
 
 ## Development
 

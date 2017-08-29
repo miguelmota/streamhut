@@ -1,6 +1,6 @@
 {
   "name": "streamhut",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "server.js",
   "bin": {
@@ -22,7 +22,7 @@
   },
   "scripts": {
     "test": "echo 'TODO'",
-    "start": "node server.js",
+    "start": "node index.js",
     "build": "browserify ./static/scripts/client.js > ./static/scripts/bundle.js",
     "watch": "watchify ./static/scripts/client.js -o ./static/scripts/bundle.js"
   },

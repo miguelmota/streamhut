@@ -9,36 +9,17 @@
 
 [https://streamhut.net](https://streamhut.net)
 
-## Usage
 
-Start server
-
-```bash
-$ npm start
-
-Listening on port 8956
-```
-
-Start server on specific port
-
-```bash
-$ PORT=8080 npm start
-
-Listening on port 8080
-```
-
-## CLI
-
-Install
+## Install
 
 ```bash
 $ npm install -g streamhut
 ```
 
-Help
+### CLI
 
 ```bash
-$ streamhut -help
+$ streamhut --help
                            (   )
                           (    )
                            (    )
@@ -87,6 +68,8 @@ $ streamhut -help
 
 ```
 
+## Usage
+
 **Listening on a channel:**
 
 ```bash
@@ -126,6 +109,8 @@ Streaming to: https://streamhut.net/dsa
 
 <img src="./screenshots/netcat.gif" width="500">
 
+### Starting a local server
+
 **Starting a streamhut server on localhost:**
 
 ```bash
@@ -134,7 +119,7 @@ HTTP/WebSocket server on port: 1336
                   Netcat port: 1337
 ```
 
-Then specify local host and port to connect:
+Then specify local hostname and port to connect:
 
 ```bash
 $ streamhut listen -h 127.0.0.1 -p 1336 -n -c yo
@@ -153,6 +138,25 @@ Build client scripts
 
 ```bash
 $ npm run build
+```
+
+Start server
+
+```bash
+$ npm start
+
+HTTP/WebSocket server on port: 8956
+                  Netcat port: 8967
+```
+
+Start server on specific port
+
+```bash
+$ PORT=8080 npm start
+
+Listening on port 8080
+HTTP/WebSocket server on port: 8080
+                  Netcat port: 8081
 ```
 
 ## Test

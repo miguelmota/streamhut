@@ -9,8 +9,9 @@
 - Path names map to channels.
 - Anyone in the same channel can view what's streamed.
 
-[https://streamhut.net](https://streamhut.net)
+## Demo
 
+[https://streamhut.net](https://streamhut.net)
 
 ## Install
 

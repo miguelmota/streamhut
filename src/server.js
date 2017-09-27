@@ -19,7 +19,9 @@ const socks = {}
 function genRandString() {
   return randomstring.generate({
     length: 3,
-    capitalization: `lowercase`
+    charset: 'alphabetic',
+    capitalization: 'lowercase',
+    readable: true
   })
 }
 
@@ -56,7 +58,7 @@ function callback(req, res) {
   }
 }
 
-function createSock(conn, pathname, clients=[]) {
+function createSock (conn, pathname, clients=[]) {
   if (!conn.id) {
     conn.id = uuid()
   }

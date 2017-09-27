@@ -11,7 +11,7 @@ const ws = new WebSocket(`${protocol === 'https:' ? `wss` : `ws`}://${host}${pat
 
 ws.binaryType = 'arraybuffer'
 
-const log = document.querySelector(`#log`)
+const connectionsLog = document.querySelector(`#connections`)
 const form = document.querySelector(`#form`)
 const input = document.querySelector(`#input`)
 const text = document.querySelector(`#text`)
@@ -43,8 +43,12 @@ shareUrl.addEventListener(`click`, event => {
   event.currentTarget.select()
 }, false)
 
+
+const channelUrlCopy = document.querySelector('#channel-url-copy')
+setClipboard(channelUrlCopy)
+
 function logMessage(data) {
-  log.innerHTML = JSON.stringify(data, null, 2)
+  connectionsLog.innerHTML = JSON.stringify(data, null, 2)
 }
 
 function create(type) {
@@ -154,16 +158,20 @@ ws.addEventListener('message', event => {
   let ext = mime.split(`/`).join(`_`).replace(/[^\w\d_]/gi, ``)
   const url = window.URL.createObjectURL(blob)
 
-  const tpd = create(`div`)
+  const itemheader = create(`header`)
+  doc.appendChild(itemheader)
+
+  const tpd = create(`span`)
   tpd.appendChild(create(`text`)(`${blob.type} size:${blob.size}B`))
-  doc.appendChild(tpd)
+  itemheader.appendChild(tpd)
 
   const a = create(`a`)
   a.appendChild(create(`text`)(url))
   a.title = `view asset`
   a.href = url
   a.target = `_blank`
-  doc.appendChild(a)
+  a.rel = `noopener noreferrer`
+  itemheader.appendChild(a)
 
   const dv = create(`article`)
 
@@ -198,7 +206,7 @@ ws.addEventListener('message', event => {
       const pr = create(`code`)
       pr.id = `id_${Date.now()}`
       clipboardNode = pr
-      pr.innerHTML = hyperlinkify(t, {target: '_blank'})
+      pr.innerHTML = hyperlinkify(t, {target: '_blank', rel: `noopener noreferrer`})
       dv.appendChild(pr)
 
       const cp = create(`a`)
@@ -240,6 +248,9 @@ ws.addEventListener('message', event => {
 
   el.appendChild(doc)
   output.insertBefore(el, output.firstChild)
+
+  // scroll down to new message
+  window.scrollTo(0, el.offsetTop)
 })
 
 ws.addEventListener(`open`, () => {

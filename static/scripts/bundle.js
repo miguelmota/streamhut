@@ -6185,6 +6185,8 @@ ws.addEventListener('message', event => {
 
   }
 
+  updateWindowTitle()
+
   const doc = document.createDocumentFragment()
   const el = create(`div`)
   el.classList.add(`item`)
@@ -6317,5 +6319,44 @@ ws.addEventListener(`open`, () => {
 ws.addEventListener(`close`, () => {
   console.log(`connection closed`)
 })
+
+function changeFavicon (uri) {
+  const link = document.createElement('link')
+  const oldLink = document.getElementById('favicon')
+
+  link.id = 'favicon'
+  link.rel = 'icon'
+  link.href = uri
+
+  if (oldLink) {
+    document.head.removeChild(oldLink)
+  }
+
+  document.head.appendChild(link)
+}
+
+function updateWindowTitle () {
+  if (document.hidden) {
+    newMessageWindowTitle()
+  } else {
+    resetWindowTitle()
+  }
+}
+
+function resetWindowTitle() {
+  changeFavicon('/favicon.ico')
+  document.title = 'Streamhut'
+}
+
+function newMessageWindowTitle() {
+  changeFavicon('/favicon_alert.ico')
+  document.title = '(new message) Streamhut'
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    resetWindowTitle()
+  }
+}, false)
 
 },{"arraybuffer-mime":2,"clipboard":4,"hyperlinkify":9,"xterm":33}]},{},[34]);

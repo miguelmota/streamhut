@@ -244,6 +244,9 @@ a:hover {
 
 #terminal {
   margin-bottom: 20px;
+  min-height: 400px;
+  resize: vertical;
+  display: none;
 }
 
 @media (max-width: 760px) {

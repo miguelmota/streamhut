@@ -4,7 +4,6 @@ const {
   arrayBufferWithMime,
   arrayBufferMimeDecouple
 } = require('arraybuffer-mime')
-const Terminal = require('xterm')
 
 const {pathname, host, protocol}  = window.location
 const ws = new WebSocket(`${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`)
@@ -140,18 +139,23 @@ ws.addEventListener('message', event => {
 
   if (mime === 'shell') {
     if (!term) {
-      term = new Terminal()
+      term = new window.Terminal({
+        convertEol: true,
+        scrollback: 10000,
+        disableStdin: true,
+        cursorBlink: true
+      })
       termNode = document.getElementById('terminal')
+      termNode.style.display = 'block'
       term.open(termNode)
+      term.fit()
+      window.addEventListener('resize', () => {
+        term.fit()
+      })
     }
 
-    const blob = new Blob([arrayBuffer], {type: 'text/plain'})
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = reader.result
-      term.write(`${text}\r`)
-    }
-    reader.readAsText(blob)
+    const text = new window.TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer))
+    term.write(`${text}\r`)
     return false
   }
 

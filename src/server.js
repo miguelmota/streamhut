@@ -145,7 +145,12 @@ function start(props = {}) {
     netConnections[pathname] = socket
 
     const info = socket.address()
-    const address = info.address.split(':').splice(-1, 1)
+    let address = info.address.split(':').splice(-1, 1)[0]
+
+    if (address === '1') {
+      address = '127.0.0.1'
+    }
+
     const hostUrl = process.env.HOST_URL || `http://${address}:${port}`
 
     const url = `Streaming to: ${hostUrl}${pathname}`

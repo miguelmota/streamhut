@@ -86,8 +86,9 @@ function createSock (conn, pathname, clients=[]) {
     console.log('received data')
     //console.log('received: %s', data)
     //console.log(`\n${pathname}\n---${data}---`)
+
     clients.forEach(client => {
-      console.log(`streaming to ${client.id} ${pathname}`)
+      console.log(`Streaming to ${client.id} ${pathname}`)
       client.send(data)
     })
   })
@@ -147,7 +148,7 @@ function start(props = {}) {
     const info = socket.address()
     let address = info.address.split(':').splice(-1, 1)[0]
 
-    if (address === '1') {
+    if (!address || address === '1') {
       address = '127.0.0.1'
     }
 

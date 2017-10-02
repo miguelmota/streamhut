@@ -65,7 +65,7 @@ $ streamhut --help
     -V, --version          output the version number
     -h, --host <host>      host name
     -p, --port <port>      host port
-    -n, --not-secure       not using SSL.
+    -n, --not-secure       not using SSL
     -c, --channel <id>     channel ID
     -t, --text <text>      text to send
 
@@ -101,6 +101,15 @@ $ streamhut post -h streamhut.net -c yo -f hello.txt
 posting data to wss://streamhut.net/yo:
 
 hello.txt
+```
+
+**Posting text data from stdin to a channel:**
+
+```bash
+$ cat hello.txt | streamhut post -h streamhut.net -c yo
+posting data to wss://streamhut.net/yo:
+
+hello
 ```
 
 **Pipe realtime stdout to streamhut xterm using [`netcat`](https://en.wikipedia.org/wiki/Netcat):**

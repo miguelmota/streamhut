@@ -4,7 +4,7 @@
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "server.js",
   "bin": {
-    "streamhut": "bin/streamhut.js"
+    "streamhut": "bin/streamhut"
   },
   "dependencies": {
     "arraybuffer-mime": "0.0.3",

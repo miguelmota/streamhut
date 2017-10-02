@@ -10,18 +10,18 @@ const {
 const { start } = require('./server')
 const packageJson = require('../package.json')
 
-const art = fs.readFileSync(path.resolve(__dirname, 'hut.txt'), 'utf8')
+const hut = fs.readFileSync(path.resolve(__dirname, 'hut.txt'), 'utf8')
 
 if (process.argv.indexOf('--help') > -1 &&
   process.argv.length === 3) {
-  console.log(art)
+  console.log(hut)
 }
 
 program
   .version(packageJson.version)
   .option('-h, --host <host>', 'host name', null, null)
   .option('-p, --port <port>', 'host port', null, null)
-  .option('-n, --not-secure', 'not using SSL.', null, false)
+  .option('-n, --not-secure', 'not using SSL', null, false)
   .option('-c, --channel <id>', 'channel ID', null, null)
   .option('-t, --text <text>', 'text to send', null, null)
   .option('-f, --file <filepath>', 'file to send', null, null)
@@ -63,14 +63,31 @@ program
         return showHelp()
       }
 
-      post({
-        channel,
-        host,
-        port,
-        notSecure,
-        text,
-        filepath: file
-      })
+      if (text || file) {
+        post({
+          channel,
+          host,
+          port,
+          notSecure,
+          text,
+          filepath: file
+        })
+      } else {
+        process.stdin.on('readable', () => {
+          const rawData = process.stdin.read()
+
+          if (rawData) {
+            const data = rawData.toString('utf8')
+            post({
+              channel,
+              host,
+              port,
+              notSecure,
+              text: data
+            })
+          }
+        })
+      }
     } else {
       showHelp()
     }
@@ -83,7 +100,7 @@ if (!program.args.length) {
 }
 
 function showHelp () {
-  console.log(art)
+  console.log(hut)
   program.help()
 }
 
@@ -123,7 +140,7 @@ function listen (props) {
 }
 
 function post (props) {
-  const {text, filepath} = props
+  const {text, filepath, channel} = props
 
   const url = constructWebsocketUrl(props)
 
@@ -158,7 +175,7 @@ function post (props) {
 
   ws.on('error', (error) => {
     if (/400|ECONNREFUSED/gi.test(error.message)) {
-      console.error('no one is listening on ', path)
+      console.error(`no one is listening on channel: ${channel}`)
     }
   })
 }

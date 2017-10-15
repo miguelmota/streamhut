@@ -251,6 +251,10 @@ a:hover {
   display: none;
 }
 
+.terminal {
+  font-family: "Menlo", "DejaVu Sans Mono", "Lucida Console", monospace;
+}
+
 @media (max-width: 760px) {
   #header {
     flex-direction: column;

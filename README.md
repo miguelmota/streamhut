@@ -11,7 +11,7 @@
 
 ## Demo
 
-[https://streamhut.net](https://streamhut.net)
+[https://streamhut.io](https://streamhut.io)
 
 ## Install
 
@@ -76,8 +76,8 @@ $ streamhut --help
 **Listening on a channel:**
 
 ```bash
-$ streamhut listen -h streamhut.net -c yo
-connected to wss://streamhut.net/yo
+$ streamhut listen -h streamhut.io -c yo
+connected to wss://streamhut.io/yo
 
 received Fri Jun 30 2017 14:40:14 GMT-0700 (PDT):
 
@@ -88,8 +88,8 @@ hello
 **Posting text data to a channel:**
 
 ```bash
-$ streamhut post -h streamhut.net -c yo -t "hello"
-posting data to wss://streamhut.net/yo:
+$ streamhut post -h streamhut.io -c yo -t "hello"
+posting data to wss://streamhut.io/yo:
 
 hello
 ```
@@ -97,8 +97,8 @@ hello
 **Posting file data to a channel:**
 
 ```bash
-$ streamhut post -h streamhut.net -c yo -f hello.txt
-posting data to wss://streamhut.net/yo:
+$ streamhut post -h streamhut.io -c yo -f hello.txt
+posting data to wss://streamhut.io/yo:
 
 hello.txt
 ```
@@ -106,8 +106,8 @@ hello.txt
 **Posting text data from stdin to a channel:**
 
 ```bash
-$ cat hello.txt | streamhut post -h streamhut.net -c yo
-posting data to wss://streamhut.net/yo:
+$ cat hello.txt | streamhut post -h streamhut.io -c yo
+posting data to wss://streamhut.io/yo:
 
 hello
 ```
@@ -115,8 +115,8 @@ hello
 **Pipe realtime stdout to streamhut xterm using [`netcat`](https://en.wikipedia.org/wiki/Netcat):**
 
 ```bash
-$ while true; do date; sleep 1; done | nc streamhut.net 1337
-Streaming to: https://streamhut.net/dsa
+$ while true; do date; sleep 1; done | nc streamhut.io 1337
+Streaming to: https://streamhut.io/dsa
 ```
 
 <img src="./screenshots/netcat.gif" width="500">

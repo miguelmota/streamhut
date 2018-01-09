@@ -1108,7 +1108,7 @@ ws.addEventListener('message', event => {
   const blob = new Blob([arrayBuffer], {type: mime})
 
   let ext = mime.split(`/`).join(`_`).replace(/[^\w\d_]/gi, ``)
-  const url = window.URL.createObjectURL(blob)
+  url = window.URL.createObjectURL(blob)
 
   const itemheader = create(`header`)
   doc.appendChild(itemheader)
@@ -1171,6 +1171,16 @@ ws.addEventListener('message', event => {
       setClipboard(cp)
       cp.appendChild(cpt)
       btdl.appendChild(cp)
+
+      // if the text is just an image url
+      if (/^https?:\/\/[^\s\r\n]+(png|jpe?g|svg)$/i.test(t)) {
+        url = t
+        const idv = create(`div`)
+        const img = create(`img`)
+        img.src = url
+        idv.appendChild(img)
+        dv.appendChild(idv)
+      }
     }
 
     reader.readAsText(blob)

@@ -17,8 +17,17 @@ const text = document.querySelector(`#text`)
 const fileInput = document.querySelector(`#file`)
 const output = document.querySelector(`#output`)
 const shareUrl = document.querySelector(`#share-url`)
+const termNode = document.getElementById('terminal')
 
 let term = null
+
+const urlParams = window.location.search.substr(1).split('&')
+  .map(x => x.split('='))
+  .reduce((obj, x) => (obj[x[0]] = x[1], obj), {})
+
+if ('f' in urlParams) {
+  document.body.classList.add('fullscreen')
+}
 
 function setClipboard(element) {
   const clipboard = new Clipboard(element)
@@ -145,17 +154,26 @@ ws.addEventListener('message', event => {
         disableStdin: true,
         cursorBlink: true
       })
-      termNode = document.getElementById('terminal')
       termNode.style.display = 'block'
       term.open(termNode)
       term.fit()
       window.addEventListener('resize', () => {
         term.fit()
       })
+
+      let p = window.location.pathname
+      let q = window.location.search
+      const fsUrl = `${p}${q}${q.length ? '&' : '?'}f=1`
+      const a = document.createElement('a')
+      a.href = fsUrl
+      a.textContent = 'full screen'
+      a.className = 'terminal-full-screen'
+      termNode.appendChild(a)
     }
 
     const text = new window.TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer))
     term.write(`${text}\r`)
+
     return false
   }
 

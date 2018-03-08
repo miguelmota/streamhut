@@ -121,6 +121,14 @@ Streaming to: https://streamhut.io/dsa
 
 <img src="./screenshots/netcat.gif" width="500">
 
+Add a delay before piping contents to know the streamhut url ahead of time:
+
+```bash
+$ (echo -n; sleep 10; cat hello.txt) | nc streamhut.io 1337
+Streaming to: https://streamhut.io/aoj
+# waits 10 seconds, and then send contents of file.
+```
+
 ### Starting a local server
 
 **Starting a streamhut server on localhost:**

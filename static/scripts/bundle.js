@@ -76,14 +76,14 @@ function arrayBufferMimeDecouple(arrayBufferWithMime) {
   var arrayBuffer = uint8.slice(ARRAY_SIZE).buffer
 
   return {
-    mime,
-    arrayBuffer
+    mime: mime,
+    arrayBuffer: arrayBuffer
   }
 }
 
 module.exports = {
-  arrayBufferWithMime,
-  arrayBufferMimeDecouple
+  arrayBufferWithMime: arrayBufferWithMime,
+  arrayBufferMimeDecouple: arrayBufferMimeDecouple
 }
 
 },{"arraybuffer-concat":1}],3:[function(require,module,exports){

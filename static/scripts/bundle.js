@@ -50,7 +50,7 @@ function arrayBufferWithMime(arrayBuffer, mime) {
   const uint8 = new Uint8Array(ARRAY_SIZE)
   const len = mime.length
 
-  for (let i = 0; i < len; i++) {
+  for (var i = 0; i < len; i++) {
     var n = mime[i].charCodeAt(0)
     uint8[i] = n
   }
@@ -62,10 +62,10 @@ function arrayBufferWithMime(arrayBuffer, mime) {
 
 function arrayBufferMimeDecouple(arrayBufferWithMime) {
   const uint8 = new Uint8Array(arrayBufferWithMime)
-  let mime = ''
+  var mime = ''
 
-  for (let i = 0; i < ARRAY_SIZE; i++) {
-    let char = uint8[i]
+  for (var i = 0; i < ARRAY_SIZE; i++) {
+    var char = uint8[i]
     if (char === 0) {
       break
     }

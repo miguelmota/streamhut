@@ -1,13 +1,13 @@
 {
   "name": "streamhut",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "server.js",
   "bin": {
     "streamhut": "bin/streamhut"
   },
   "dependencies": {
-    "arraybuffer-mime": "0.0.3",
+    "arraybuffer-mime": "0.0.4",
     "clipboard": "^1.7.1",
     "commander": "^2.10.0",
     "ecstatic": "^0.5.5",

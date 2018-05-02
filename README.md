@@ -8,7 +8,7 @@
 
 > Stream and send data, terminal to web and vice versa.
 
-<img src="./static/assets/streamhut.png" width="150" />
+## Synopsis
 
 - Nothing is stored; only streamed.
 - Originally created this to quickly share data and files between devices.

@@ -17,7 +17,7 @@
 
 ## Demo
 
-[https://streamhut.io](https://streamhut.io)
+**[https://streamhut.io](https://streamhut.io)**
 
 ## Install
 

@@ -14,10 +14,10 @@
     "hyperlinkify": "0.0.3",
     "randomstring": "^1.0.3",
     "uuid": "^3.1.0",
-    "ws": "^3.0.0"
+    "ws": "^6.1.2"
   },
   "devDependencies": {
-    "watchify": "^3.9.0"
+    "watchify": "^3.11.0"
   },
   "scripts": {
     "test": "echo 'TODO'",
@@ -43,7 +43,10 @@
     "email": "hello@miguelmota.com",
     "url": "https://miguelmota.com/"
   },
-  "license": "MIT",
+  "license": {
+    "type": "MIT",
+    "url": "https://github.com/miguelmota/streamhut/blob/master/LICENSE"
+  },
   "bugs": {
     "url": "https://github.com/miguelmota/streamhut/issues"
   },

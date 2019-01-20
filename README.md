@@ -1,12 +1,16 @@
-<h1 align="center">
+<h3 align="center">
   <br />
-  <img src="https://user-images.githubusercontent.com/168240/39515825-119445f0-4db0-11e8-93ef-7f3f67abccb2.png" alt="streamhut" width="700" />
+  <img src="https://user-images.githubusercontent.com/168240/39515825-119445f0-4db0-11e8-93ef-7f3f67abccb2.png" alt="logo" width="700" />
   <br />
   <br />
   <br />
-</h1>
+</h3>
+
+# streamhut
 
 > Stream and send data, terminal to web and vice versa.
+
+[![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/miguelmota/streamhut/master/LICENSE) [![Build Status](https://travis-ci.org/miguelmota/streamhut.svg?branch=master)](https://travis-ci.org/miguelmota/streamhut) [![dependencies Status](https://david-dm.org/miguelmota/streamhut/status.svg)](https://david-dm.org/miguelmota/streamhut) [![NPM version](https://badge.fury.io/js/streamhut.svg)](http://badge.fury.io/js/streamhut)
 
 ## Synopsis
 
@@ -193,4 +197,4 @@ npm test
 
 ## License
 
-MIT
+[MIT](LICENSE)

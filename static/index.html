@@ -55,7 +55,12 @@
         <li>Quickly share data and files between devices.</li>
         <li>URL path names map to channels.</li>
         <li>Anyone in the same channel can view what's streamed.</li>
-        <li>CLI <code>$ tail -F file.log | nc streamhut.io 1337</code></li>
+        <li>CLI examples:</li>
+        <li>Tail: <code>$ tail -F file.log | nc streamhut.io 1337</code></li>
+        <li>Tee: <code>$ (echo -n; sleep 5; htop) | tee >(nc streamhut.io 1337)</code></li>
+        <li>Pipe shell: <code>$ exec > >(nc streamhut.io 1337) 2>&1</code></li>
+        <li>Echo: <code>$ echo 'foo' | streamhut post -h streamhut.io -c mychannel</code></li>
+        <li>File: <code>$ streamhut post -h streamhut.io -c mychannel -f data.txt</code></li>
         <li><a href="https://github.com/miguelmota/streamhut" target="_blank" rel="noopener noreferrer">Developer documentation</a> | <a href="https://github.com/miguelmota/streamhut/issues/new" target="_blank" rel="noopener noreferrer">Feedback</a></i>
         </ul>
       </div>

@@ -134,9 +134,31 @@ Streaming to: https://streamhut.io/dsa
 Add a delay before piping contents to know the streamhut url ahead of time:
 
 ```bash
-$ (echo -n; sleep 10; cat hello.txt) | nc streamhut.io 1337
+$ (echo -n; sleep 5; cat hello.txt) | nc streamhut.io 1337
 Streaming to: https://streamhut.io/aoj
-# waits 10 seconds, and then send contents of file.
+# waits 5 seconds, and then send contents of file.
+```
+
+You can even stream the whole shell session in realtime:
+
+```bash
+exec > >(nc streamhut.io 1337) 2>&1
+```
+
+Example of streaming tail of file:
+
+```bash
+# terminal 1
+$ cat >data.txt
+
+# terminal 2
+$ tail -F data.txt | nc streamhut.io 1337
+```
+
+Example of piping to both stdout and netcat:
+
+```bash
+$ (echo -n; sleep 5; htop) | tee >(nc streamhut.io 1337)
 ```
 
 ### Starting a local server
@@ -155,6 +177,15 @@ Then specify local hostname and port to connect:
 $ streamhut listen -h 127.0.0.1 -p 1336 -n -c yo
 connected to ws://127.0.0.1:1336/yo
 ```
+
+Post a message to the channel:
+
+```bash
+$ echo 'hello' | streamhut post -h 127.0.0.1 -n -p 1336 -c yo
+posting data to ws://streamhut.io/yo:
+```
+
+hello
 
 ## Development
 

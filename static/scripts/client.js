@@ -172,7 +172,7 @@ ws.addEventListener('message', event => {
     }
 
     const text = new window.TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer))
-    term.write(`${text}\r`)
+    term.write(text)
 
     return false
   }

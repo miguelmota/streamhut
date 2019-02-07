@@ -143,6 +143,7 @@ function post (props) {
   const {text, filepath, channel} = props
 
   const url = constructWebsocketUrl(props)
+  console.log(`sending to ${url}`)
 
   const ws = new WebSocket(url)
   ws.binaryType = 'arraybuffer'

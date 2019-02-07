@@ -158,6 +158,7 @@ function start(props = {}) {
 
     socket.write(`${url}\n`)
 
+      socket.pipe(socket)
     socket.on('data', (buffer) => {
       const clients = socks[pathname]
 

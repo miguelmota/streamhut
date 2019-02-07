@@ -142,7 +142,7 @@ Streaming to: https://streamhut.io/aoj
 You can even stream the whole shell session in realtime:
 
 ```bash
-exec > >(nc streamhut.io 1337) 2>&1
+$ exec > >(nc streamhut.io 1337) 2>&1
 ```
 
 Example of streaming tail of file:

@@ -1,6 +1,6 @@
 {
   "name": "streamhut",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "index.js",
   "bin": {
@@ -10,7 +10,8 @@
     "lerna": "^3.13.1"
   },
   "scripts": {
-    "test": "echo 'TODO'"
+    "test": "echo 'TODO'",
+    "postinstall": "lerna bootstrap"
   },
   "repository": {
     "type": "git",

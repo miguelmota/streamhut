@@ -1,16 +1,30 @@
 {
-  "name": "streamhut",
-  "version": "0.1.0",
+  "name": "streamhut-server",
+  "version": "0.0.1",
   "description": "Stream and send data, terminal to web and vice versa.",
-  "main": "index.js",
+  "main": "server.js",
   "bin": {
-    "streamhut": "packages/client/bin/streamhut"
+    "streamhut": "bin/streamhut"
+  },
+  "dependencies": {
+    "arraybuffer-mime": "0.0.5",
+    "clipboard": "^1.7.1",
+    "commander": "^2.10.0",
+    "ecstatic": "^3.2.0",
+    "hyperlinkify": "0.0.3",
+    "randomstring": "^1.0.3",
+    "uuid": "^3.1.0",
+    "ws": "^6.1.2"
   },
   "devDependencies": {
-    "lerna": "^3.13.1"
+    "watchify": "^3.11.0"
   },
   "scripts": {
-    "test": "echo 'TODO'"
+    "test": "echo 'TODO'",
+    "start": "node index.js",
+    "start:prod": "HOST_URL='https://streamhut.io' NET_PORT=1337 node index.js",
+    "build": "browserify ./static/scripts/client.js > ./static/scripts/bundle.js",
+    "watch": "watchify ./static/scripts/client.js -o ./static/scripts/bundle.js"
   },
   "repository": {
     "type": "git",

@@ -1,12 +1,12 @@
 {
   "name": "streamhut",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "index.js",
   "bin": {
     "streamhut": "packages/client/bin/streamhut"
   },
-  "devDependencies": {
+  "dependencies": {
     "lerna": "^3.13.1"
   },
   "scripts": {

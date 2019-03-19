@@ -13,7 +13,6 @@
     "ecstatic": "^3.2.0",
     "hyperlinkify": "0.0.3",
     "randomstring": "^1.0.3",
-    "streamhut-server": "^0.0.2",
     "uuid": "^3.1.0",
     "ws": "^6.1.2"
   },

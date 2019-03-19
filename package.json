@@ -1,17 +1,17 @@
 {
   "name": "streamhut",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "index.js",
   "bin": {
     "streamhut": "packages/client/bin/streamhut"
   },
-  "dependencies": {
+  "devDependencies": {
     "lerna": "^3.13.1"
   },
   "scripts": {
     "test": "echo 'TODO'",
-    "postinstall": "lerna bootstrap"
+    "postinstall": "(cd packages/client && npm i) && (cd packages/server && npm i)"
   },
   "repository": {
     "type": "git",

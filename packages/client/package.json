@@ -1,6 +1,6 @@
 {
   "name": "streamhut-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "server.js",
   "bin": {
@@ -13,7 +13,7 @@
     "ecstatic": "^3.2.0",
     "hyperlinkify": "0.0.3",
     "randomstring": "^1.0.3",
-    "streamhut-server": "^0.0.1",
+    "streamhut-server": "^0.0.2",
     "uuid": "^3.1.0",
     "ws": "^6.1.2"
   },

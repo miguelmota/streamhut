@@ -21,11 +21,7 @@
     "watchify": "^3.11.0"
   },
   "scripts": {
-    "test": "echo 'TODO'",
-    "start": "node index.js",
-    "start:prod": "HOST_URL='https://streamhut.io' NET_PORT=1337 node index.js",
-    "build": "browserify ./static/scripts/client.js > ./static/scripts/bundle.js",
-    "watch": "watchify ./static/scripts/client.js -o ./static/scripts/bundle.js"
+    "test": "echo 'TODO'"
   },
   "repository": {
     "type": "git",

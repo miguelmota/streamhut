@@ -1,6 +1,6 @@
 {
   "name": "streamhut-web",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
     "@material-ui/core": "^3.9.2",
     "@material-ui/icons": "^3.0.2",

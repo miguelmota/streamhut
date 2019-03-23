@@ -218,24 +218,12 @@ input[type="text"]:focus {
 /* end sticky footer */
 
 #terminal {
-  min-height: 400px;
   resize: vertical;
   background: #000;
 }
 
 .terminal {
   font-family: "Menlo", "DejaVu Sans Mono", "Lucida Console", monospace;
-}
-
-.terminal-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 1em;
 }
 
 .terminal-full-screen {
@@ -271,6 +259,8 @@ body.fullscreen #terminal {
   top: 0;
   width: 100%;
   height: 100%;
+  min-height: 100%;
+  max-height: 100%;
   z-index: 1;
   margin: 0;
 }

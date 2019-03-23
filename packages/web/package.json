@@ -4,10 +4,13 @@
   "dependencies": {
     "@material-ui/core": "^3.9.2",
     "@material-ui/icons": "^3.0.2",
+    "ansi-styles": "^3.2.1",
     "arraybuffer-mime": "^0.0.5",
+    "chalk": "^2.4.2",
     "clipboard": "^2.0.4",
     "gun": "^0.9.9999991",
     "hyperlinkify": "^0.0.3",
+    "lodash": "^4.17.11",
     "mdi-material-ui": "^5.10.0",
     "moment": "^2.24.0",
     "prettysize": "^2.0.0",

@@ -15,6 +15,10 @@ import Tag from './Tag'
 import randomstring from 'randomstring'
 import styled from 'styled-components'
 import prettysize from 'prettysize'
+import throttle from 'lodash/throttle'
+import ansi from 'ansi-styles'
+
+const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.open}`
 
 const gun = Gun('ws://localhost:8765/gun')
 
@@ -220,6 +224,44 @@ const UI = {
     font-style: italic;
     color: #7b7b7b;
     font-size: 0.8em;
+  `,
+  /*background: #293238;*/
+  TerminalContainer: styled.div`
+    background-color: #000;
+    padding-bottom: 10px;
+    position: relative;
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+  `,
+  Terminal: styled.div`
+
+  `,
+  TerminalFooter: styled.footer`
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 1em;
+  `,
+  TerminalResizer: styled.div`
+    width: 100%;
+    height: 10px;
+    position: absolute;
+    bottom: 0;
+    cursor: ns-resize;
+    background-color: #efefef;
+    border: 1px solid #cacaca;
+    text-align: center;
+    font-size: 0.5em;
+    color: #797979;
+    &:hover {
+      background-color: #e6e6e6;
+      border-color: #adadad;
+    }
   `
 }
 
@@ -254,6 +296,8 @@ class Home extends Component {
     this.output = React.createRef()
     this.fileInput = React.createRef()
     this.terminalRef = React.createRef()
+    this.terminalContainerRef = React.createRef()
+    this.terminalResizerRef = React.createRef()
   }
 
   setFullScreen() {
@@ -320,6 +364,23 @@ class Home extends Component {
   }
 
   componentDidMount() {
+      this.term = new window.Terminal({
+        convertEol: true,
+        scrollback: 10000,
+        disableStdin: true,
+        cursorBlink: true
+      })
+      let termNode = this.terminalRef.current
+      termNode.style.display = 'block'
+      this.term.open(termNode)
+      this.term.fit()
+      window.addEventListener('resize', this.onWindowResize)
+
+      let cmd = green('exec > >(nc streamhut.io 1337) 2>&1')
+      this.term.writeln(`To get started, run in you terminal:\n\n${cmd}\n`)
+
+      this.setupTerminalResizer()
+
     this.ws = createWs();
 
     /*
@@ -343,6 +404,48 @@ class Home extends Component {
     })
 
     this.readCachedMessages()
+  }
+
+  componentDidUnmount() {
+    let resizer = this.terminalResizerRef.current
+    resizer.removeEventListener('mousedown', this.onTerminalResizer)
+
+    window.removeEventListener('resize', this.onWindowResize)
+  }
+
+  onWindowResize = throttle(() => {
+    this.term.fit()
+  }, 20)
+
+  onTerminalResizer = (event) => {
+    if (event.offsetY < this.borderSize) {
+      this.pos = event.y
+      document.addEventListener('mousemove', this.resizeTerminal, false)
+    }
+  }
+
+  resizeTerminal = throttle(event => {
+    let container = this.terminalContainerRef.current
+    let terminal = this.terminalRef.current
+    const dy = this.pos - event.y
+    this.pos = event.y
+    const newHeight = (parseInt(getComputedStyle(container, '').height) - dy)
+    container.style.height = newHeight + 'px'
+    terminal.style.height = (newHeight-this.borderSize) + 'px'
+    this.term.fit()
+  }, 20)
+
+  setupTerminalResizer() {
+      let resizer = this.terminalResizerRef.current
+      this.borderSize = parseInt(getComputedStyle(resizer, '').height)
+
+      this.pos = 0
+
+      resizer.addEventListener('mousedown', this.onTerminalResizer, false)
+
+      document.addEventListener('mouseup', event => {
+        document.removeEventListener('mousemove', this.resizeTerminal, false)
+      }, false)
   }
 
   async readCachedMessages() {
@@ -399,23 +502,6 @@ class Home extends Component {
       console.log(arrayBuffer)
 
       if (mime === 'shell') {
-        if (!this.term) {
-          this.term = new window.Terminal({
-            convertEol: true,
-            scrollback: 10000,
-            disableStdin: true,
-            cursorBlink: true
-          })
-          //let termNode = this.terminalRef.current
-          let termNode = document.querySelector('#terminal')
-          termNode.style.display = 'block'
-          this.term.open(termNode)
-          this.term.fit()
-          window.addEventListener('resize', () => {
-            this.term.fit()
-          })
-        }
-
         const text = new window.TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer))
         console.log(text)
         this.term.write(text)
@@ -473,8 +559,6 @@ class Home extends Component {
       let clipboardText = url
 
       if (/image/gi.test(mime)) {
-
-
         element = <a
           href={url}
           target="_blank"
@@ -614,26 +698,27 @@ class Home extends Component {
         </UI.Connections>
         */}
 
-        <div style={{
-          background:'#293238',
-        }}>
-          <div style={{
-            position: 'relative',
-            with:'500px',
-            maxHeight:'500px',
-          }}>
-            <div id="terminal" ref={this.terminalRef}></div>
-            <div className="terminal-footer">
-              <a
-                href={this.state.fsUrl}
-                className="link terminal-full-screen"
-                rel="noopener noreferrer"
-              >
-                fullscreen
-              </a>
-            </div>
-          </div>
-        </div>
+        <UI.TerminalContainer
+            ref={this.terminalContainerRef}>
+          <UI.Terminal
+            id="terminal"
+            style={{
+              height: '350px'
+            }}
+            ref={this.terminalRef} />
+          <UI.TerminalFooter>
+            <a
+              href={this.state.fsUrl}
+              className="link terminal-full-screen"
+              rel="noopener noreferrer"
+            >
+              fullscreen
+            </a>
+          </UI.TerminalFooter>
+          <UI.TerminalResizer
+            ref={this.terminalResizerRef}
+          >☰</UI.TerminalResizer>
+        </UI.TerminalContainer>
 
         <div>
           <output

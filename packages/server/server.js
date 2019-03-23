@@ -119,7 +119,7 @@ function start(props = {}) {
   const server = http.createServer(callback)
 
   server.listen(port, () => {
-    console.log(`HTTP/WebSocket server on port: ${port}`)
+    console.log(`HTTP/WebSocket port: ${port}`)
   })
 
   const sock = new WebSocket.Server({
@@ -173,8 +173,11 @@ function start(props = {}) {
     })
   })
 
-  netServer.listen(netPort, () => {
-    console.log(`                  Netcat port: ${netPort}`)
+  netServer.listen({
+    hostname: '0.0.0.0',
+    port: netPort
+  }, () => {
+    console.log(`           TCP port: ${netPort}`)
   })
 }
 

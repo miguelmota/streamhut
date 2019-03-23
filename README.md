@@ -167,8 +167,8 @@ $ (echo -n; sleep 5; htop) | tee >(nc streamhut.io 1337)
 
 ```bash
 $ streamhut server -p 1336
-HTTP/WebSocket server on port: 1336
-                  Netcat port: 1337
+HTTP/WebSocket port: 1336
+           TCP port: 1337
 ```
 
 Then specify local hostname and port to connect:
@@ -189,35 +189,19 @@ hello
 
 ## Development
 
-Watch and build client scripts
-
-```bash
-$ npm run watch
-```
-
-Build client scripts
-
-```bash
-$ npm run build
-```
-
 Start server
 
 ```bash
-$ npm start
+$ make server
 
-HTTP/WebSocket server on port: 8956
-                  Netcat port: 8967
+HTTP/WebSocket port: 3001
+           TCP port: 1337
 ```
 
-Start server on specific port
+Start web
 
 ```bash
-$ PORT=8080 npm start
-
-Listening on port 8080
-HTTP/WebSocket server on port: 8080
-                  Netcat port: 8081
+$ make web
 ```
 
 ## Test

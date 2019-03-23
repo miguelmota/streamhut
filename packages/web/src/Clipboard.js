@@ -17,6 +17,7 @@ class Clipboard extends Component {
     return (
       <ClipboardJS
         className={this.props.className || 'copy'}
+        style={this.props.style}
         id={this.props.id}
         title="Copy to clipboard"
         data-clipboard-text={this.props.clipboardText}

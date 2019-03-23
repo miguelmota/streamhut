@@ -10,6 +10,7 @@
     "hyperlinkify": "^0.0.3",
     "mdi-material-ui": "^5.10.0",
     "moment": "^2.24.0",
+    "prettysize": "^2.0.0",
     "randomstring": "^1.1.5",
     "react": "^16.8.4",
     "react-clipboard.js": "^2.0.6",

@@ -6,19 +6,22 @@ import {
 } from 'arraybuffer-mime'
 
 import Gun from 'gun'
+import moment from 'moment'
 import Header from './Header'
 import Clipboard from './Clipboard'
-import MaxWidthContainer from './MaxWidthContainer'
+//import MaxWidthContainer from './MaxWidthContainer'
 import DragAndDrop from './DragAndDrop'
 import Tag from './Tag'
 import randomstring from 'randomstring'
+import styled from 'styled-components'
+import prettysize from 'prettysize'
 
 const gun = Gun('ws://localhost:8765/gun')
 
 function createWs() {
     const {pathname, host, protocol}  = window.location
-    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
-    //let wsurl = `ws://localhost:3001${pathname}`
+    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
+    let wsurl = `ws://localhost:3001${pathname}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 
@@ -92,6 +95,132 @@ function genRandString() {
     capitalization: 'lowercase',
     readable: true
   })
+}
+
+const UI = {
+  SiteContainer: styled.main`
+  `,
+  Header: styled.header`
+    display: flex;
+    justify-content: space-between;
+    background: #e2e2e2;
+    padding: 5px;
+    position: relative;
+    padding-right: 35px;
+  `,
+  Form: styled.form`
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0;
+    background: #efefef;
+    padding: 10px;
+    position: relative;
+  `,
+  FormGroup: styled.div`
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    flex-direction: column;
+    margin: 0;
+    padding: 0.5em;
+
+    &.file-form-group {
+      min-width: 250px;
+    }
+    &.input-form-group {
+      width: 100%;
+    }
+    &.submit-form-group {
+    }
+  `,
+  Connections: styled.div`
+    display: inline-block;
+    width: auto;
+    max-height: 120px;
+    overflow: auto;
+    font-size: 0.8em;
+    white-space: pre-wrap;
+    margin-bottom: 2em;
+    background: rgba(239, 239, 239, 0.35);
+    padding: 1em;
+  `,
+  Message: styled.div`
+    background: #efefef;
+    width: 100%;
+    font-size: 12px;
+    margin: 0 0 0.2em 0;
+
+    article {
+      display: flex;
+      margin: 10px 0 15px 0;
+      padding: 5px;
+    }
+
+    pre,
+    code {
+      width: 100%;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    img {
+      max-width: 500px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      background: #e2e2e2;
+      font-size: 0.8em;
+      position: relative;
+      padding: 0.4em 2em 0.4em 0.4em;
+      overflow: hidden;
+    }
+
+    header:after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 2em;
+      height: 4em;
+      background: #fff;
+      right: 0;
+      top: 0;
+      transform: rotate(-45deg) translate(1.7em,-1em);
+    }
+
+    footer {
+      display: flex;
+      font-size: 0.8em;
+      justify-content: space-between;
+      background: #e2e2e2;
+      padding: 0.4em;
+    }
+
+    footer .download {
+      margin-right: 10px;
+    }
+
+    footer .left {
+      display: inline-flex;
+      align-items: flex-start;
+    }
+
+    time {
+      display: inline-flex;
+      align-items: flex-end;
+      font-size: 12px;
+      text-align: right;
+      color: #999;
+    }
+  `,
+  NoMessages: styled.div`
+    font-style: italic;
+    color: #7b7b7b;
+    font-size: 0.8em;
+  `
 }
 
 class Home extends Component {
@@ -191,13 +320,14 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    this.ws = createWs()
+    this.ws = createWs();
 
+    /*
     const connectionsLog = document.querySelector(`#connections`)
+    */
 
     function logMessage(data) {
-      console.log("OFOOO")
-      connectionsLog.innerHTML = JSON.stringify(data, null, 2)
+    //connectionsLog.innerHTML = JSON.stringify(data, null, 2)
     }
 
     this.ws.addEventListener('message', event => {
@@ -237,7 +367,11 @@ class Home extends Component {
 
   sendArrayBuffer(arrayBuffer, mime) {
     const abWithMime = arrayBufferWithMime(arrayBuffer, mime)
-    this.ws.send(abWithMime)
+    try {
+      this.ws.send(abWithMime)
+    } catch(err) {
+      console.error(err)
+    }
   }
 
   async handleIncomingMessage(event) {
@@ -256,8 +390,6 @@ class Home extends Component {
       }
 
       updateWindowTitle()
-
-      const doc = document.createDocumentFragment()
 
       console.log(data)
 
@@ -313,7 +445,7 @@ class Home extends Component {
         t
       }
 
-      if (blob.size != 0) {
+      if (blob.size !== 0) {
         const messages = this.state.messages
         messages.push(message)
 
@@ -322,11 +454,14 @@ class Home extends Component {
         })
       }
 
-      this.scrollToMessages()
+      this.scrollToLatestMessages()
     }
 
-    scrollToMessages() {
-      window.scrollTo(0, this.output.current.offsetTop)
+    scrollToLatestMessages() {
+      const container = this.output.current
+      if ((container.scrollTop + 200) >= (container.scrollHeight - container.clientHeight)) {
+        container.scrollTo(0, container.scrollHeight)
+      }
     }
 
   renderMessage(data) {
@@ -334,12 +469,19 @@ class Home extends Component {
       return null
     }
     let { mime, blob, url, ext, t } = data
-      let clipboardNode = null
       let element = null
       let clipboardText = url
 
       if (/image/gi.test(mime)) {
-        element = <img src={url} />
+
+
+        element = <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="view image">
+          <img src={url} alt="" />
+        </a>
       } else if (/video/gi.test(mime)) {
         element = [<div>
           <video src={url} controls="controls" />
@@ -370,15 +512,17 @@ class Home extends Component {
 
       const filename = `${Date.now()}_${ext}`
 
-    return <div className="item" key={url}>
-      <header>
-        <span>{blob.type} size: {blob.size}B</span>
+      const timestamp = moment().format('LLLL')
+
+    return <UI.Message key={url}>
+      <UI.Header>
+        <span>{blob.type} size: {prettysize(blob.size)}</span>
         <a
           href={url}
           target="_blank"
-          rel="noopenner noreferrer"
-          title="view asset">{url}</a>
-      </header>
+          rel="noopener noreferrer"
+          title="view asset">{url}↗</a>
+      </UI.Header>
       <article>
         {element}
       </article>
@@ -390,16 +534,26 @@ class Home extends Component {
             title="download asset"
           >download</a>
           <Clipboard
+            style={{
+              fontSize: '1em',
+              marginLeft: '1em'
+            }}
             clipboardText={clipboardText}
           />
         </div>
-        <time>{(new Date()).toString()}</time>
+        <time>{timestamp}</time>
       </footer>
-    </div>
+    </UI.Message>
   }
 
   handleKeyPress(event) {
-    if (event.key === 'Enter' && event.shiftKey) {
+    if (event.key === 'Enter' && (event.shiftKey || event.ctrlKey || event.altKey)) {
+      if (!event.shiftKey) {
+        this.setState({
+          text: this.state.text + '\n'
+        })
+      }
+    } else if (event.key === 'Enter') {
       this.handleSubmit(event)
     }
   }
@@ -443,54 +597,55 @@ class Home extends Component {
   }
 
   render() {
-    const items = this.state.messages.map(x => this.renderMessage(x))
+    let messages = <UI.NoMessages>no messages</UI.NoMessages>
+    if (this.state.messages.length) {
+      messages = this.state.messages.map(x => this.renderMessage(x))
+    }
 
     return (
-      <main id="site-container">
+      <UI.SiteContainer id="site-container">
         <Header
           shareUrl={this.state.shareUrl}
         />
 
-        <pre id="connections"></pre>
+      {/*
+        <UI.Connections>
+          <pre></pre>
+        </UI.Connections>
+        */}
 
         <div style={{
-          position: 'relative',
-          with:'500px',
-          maxHeight:'500px',
+          background:'#293238',
         }}>
-          <div id="terminal" ref={this.terminalRef}></div>
-          <div className="terminal-footer">
-            <a
-              href={this.state.fsUrl}
-              className="link terminal-full-screen"
-              rel="noopener noreferrer"
-            >
-              fullscreen
-            </a>
+          <div style={{
+            position: 'relative',
+            with:'500px',
+            maxHeight:'500px',
+          }}>
+            <div id="terminal" ref={this.terminalRef}></div>
+            <div className="terminal-footer">
+              <a
+                href={this.state.fsUrl}
+                className="link terminal-full-screen"
+                rel="noopener noreferrer"
+              >
+                fullscreen
+              </a>
+            </div>
           </div>
         </div>
 
-        <MaxWidthContainer>
+        <div>
           <output
             id="output"
             ref={this.output}>
-            {items}
+            {messages}
           </output>
-          <form
+          <UI.Form
             id="form"
             onSubmit={event => this.handleSubmit(event)}>
-            <div className="form-group">
-              <label>Text <small>shift-enter to submit</small></label>
-              <textarea
-                id="text"
-                rows="5"
-                cols="20"
-                placeholder="text"
-                value={this.state.text}
-                onKeyPress={event => this.handleKeyPress(event)}
-                onChange={event => this.setState({text: event.target.value})}></textarea>
-            </div>
-            <div className="form-group">
+            <UI.FormGroup
+              className="file-form-group">
               <label>Files <small>Drag files into screen</small></label>
               <div style={{
                 marginBottom: '0.5em'
@@ -511,20 +666,33 @@ class Home extends Component {
                     onDelete={event => this.onFileRemove(event, file.name)}/>
                 )}
               </div>
-            </div>
-
-            <div className="form-group">
+            </UI.FormGroup>
+            <UI.FormGroup
+              className="input-form-group"
+              style={{
+                  width: '100%'
+              }}>
+              <label>Text <small>enter to submit and shift-enter for newline</small></label>
+              <textarea
+                id="text"
+                rows="2"
+                placeholder="text"
+                value={this.state.text}
+                onKeyPress={event => this.handleKeyPress(event)}
+                onChange={event => this.setState({text: event.target.value})}></textarea>
+            </UI.FormGroup>
+            <UI.FormGroup className="submit-form-group">
               <div>
                 <button
                   type="submit">
-                  Submit</button></div>
-            </div>
-          </form>
-        </MaxWidthContainer>
+                  Send</button></div>
+            </UI.FormGroup>
+          </UI.Form>
+        </div>
         <DragAndDrop
           handleDrop={files => this.handleDrop(files)}>
         </DragAndDrop>
-      </main>
+      </UI.SiteContainer>
     );
   }
 }

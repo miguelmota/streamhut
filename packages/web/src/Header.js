@@ -100,13 +100,17 @@ class Header extends Component {
               }}
             >
               <UI.Title>
-                <img
-                  style={{
-                    width: '150px',
-                    height: 'auto'
-                  }}
-                  src="/assets/streamhut_bb.png"
-                  alt="Streamhut" />
+                <a
+                  href="/"
+                  title="Home">
+                    <img
+                    style={{
+                      width: '150px',
+                      height: 'auto'
+                    }}
+                    src="/assets/streamhut_bb.png"
+                    alt="Streamhut" />
+                  </a>
 
                   <Tooltip
                     className="tooltip"

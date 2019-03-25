@@ -26,8 +26,8 @@ const gun = Gun('ws://localhost:8765/gun')
 
 function createWs() {
     const {pathname, host, protocol}  = window.location
-    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
-    let wsurl = `ws://localhost:3001${pathname}`
+    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
+    //let wsurl = `ws://localhost:3001${pathname}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 

@@ -1,6 +1,6 @@
 {
   "name": "streamhut",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "index.js",
   "bin": {

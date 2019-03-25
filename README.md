@@ -129,6 +129,13 @@ $ while true; do date; sleep 1; done | nc streamhut.io 1337
 Streaming to: https://streamhut.io/dsa
 ```
 
+Don't have netcat installed? No problem! Pipe to a file descriptor with an open TCP connection:
+
+```bash
+$ exec 3<>/dev/tcp/streamhut.io/1337 && head -1 <&3 && exec &> >(tee >(cat >&3))
+Streaming to: https://streamhut.io/qev
+```
+
 <img src="./screenshots/netcat.gif" width="500">
 
 Add a delay before piping contents to know the streamhut url ahead of time:

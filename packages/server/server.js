@@ -92,8 +92,7 @@ function createSock (conn, pathname, clients=[]) {
       client.send(data)
     })
   })
-
-  conn.on(`close`, function() {
+  .on(`close`, () => {
     console.log(`close ${conn.id}`)
 
     const index = clients.reduce((index, client, i) => {
@@ -109,6 +108,9 @@ function createSock (conn, pathname, clients=[]) {
     }
 
     sendConnections()
+  })
+  .on(`error`, (error) => {
+    console.error(error)
   })
 
   return clients
@@ -171,6 +173,10 @@ function start(props = {}) {
         })
       }
     })
+    .on('error', (error) => {
+      console.error(error)
+    })
+
   })
 
   netServer.listen({

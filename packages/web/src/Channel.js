@@ -22,12 +22,12 @@ const ESC_KEY = 27
 
 const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.close}`
 
-const gun = Gun('ws://localhost:8765/gun')
+const gun = Gun('ws://localhost:8765/gun').get('abc1')
 
 function createWs() {
     const {pathname, host, protocol}  = window.location
-    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
-    //let wsurl = `ws://localhost:3001${pathname}`
+    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
+    let wsurl = `ws://localhost:3001${pathname}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 
@@ -82,16 +82,22 @@ document.addEventListener('visibilitychange', () => {
   }
 }, false)
 
-async function get(key) {
+async function getCache(key) {
   return new Promise((resolve) => {
-    gun.get(key).on((data, key) => {
-      resolve(data)
+    gun.get(key).once((value, id) => {
+      console.log('GET', key, value)
+      try {
+        resolve(value)
+      } catch(err) {
+        resolve()
+      }
     })
   })
 }
 
-function put(key, value) {
-  gun.get(key).put({[key]: value})
+function putCache(key, value) {
+  console.log('PUT', key, value)
+  gun.get(key).put(value)
 }
 
 function genRandString() {
@@ -292,6 +298,8 @@ class Channel extends Component {
     let p = window.location.pathname
     let q = window.location.search
 
+    this.msgSeq = 0
+
     this.state.fsUrl = `${p}${q}${q.length ? '&' : '?'}f=1`
 
     this.output = React.createRef()
@@ -413,14 +421,12 @@ class Channel extends Component {
 
     this.ws.addEventListener(`open`, () => {
       console.log(`connected`)
+      this.readCachedMessages()
     })
 
     this.ws.addEventListener(`close`, () => {
       console.log(`connection closed`)
     })
-
-    this.readCachedMessages()
-
 
     document.addEventListener('keydown', event => {
       if (event.keyCode === ESC_KEY) {
@@ -482,17 +488,14 @@ class Channel extends Component {
 
   async readCachedMessages() {
     const messages = this.state.messages
-    put('messages/count', 1)
-    put('messages/1', {data: '1'})
-    const count = (await get('messages/count')).count
+    //const count = (await getCache('messages/count')).count
+    const count = 30
     if (count) {
       for (var i = 0; i < count; i++) {
-        const k = 'messages/' + (i+1)
-        console.log(k)
-        const msg = await get(k)
+        const k = 'messages/' + (i)
+        const msg = await getCache(k)
         if (msg) {
-          console.log('MESSAGE', msg)
-          //messages.push(msg)
+          this.handleIncomingMessage(msg)
         }
       }
     }
@@ -510,7 +513,14 @@ class Channel extends Component {
   }
 
   async handleIncomingMessage(event) {
-      const data = event.data
+      let data
+      if (typeof event === 'string') {
+        let value = Buffer.from(event, "hex")
+        value = value.buffer
+        data = value
+      } else {
+        data = event.data
+      }
 
       console.log('incoming...')
 
@@ -526,7 +536,16 @@ class Channel extends Component {
 
       updateWindowTitle()
 
-      console.log(data)
+      console.log('data:', data)
+
+      function buf2hex(buffer) { // buffer is an ArrayBuffer
+        return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
+      }
+
+      if (data) {
+        console.log("1", data)
+        putCache('messages/'+ this.msgSeq++, buf2hex(data))
+      }
 
       const {mime, arrayBuffer} = arrayBufferMimeDecouple(data)
 
@@ -556,7 +575,10 @@ class Channel extends Component {
       })
 
       const message = {
-        blob,
+        blob: {
+          size: blob.size,
+          type: blob.type,
+        },
         url,
         ext,
         mime,
@@ -566,6 +588,8 @@ class Channel extends Component {
       if (blob.size !== 0) {
         const messages = this.state.messages
         messages.push(message)
+
+
 
         this.setState({
           messages
@@ -623,6 +647,8 @@ class Channel extends Component {
 
               element = <code
                 dangerouslySetInnerHTML={{__html: linked}} />
+
+
             }
       }
 

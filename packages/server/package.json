@@ -6,6 +6,7 @@
   "dependencies": {
     "arraybuffer-mime": "0.0.5",
     "ecstatic": "^3.2.0",
+    "gun": "^0.2019.323",
     "randomstring": "^1.0.3",
     "uuid": "^3.1.0",
     "ws": "^6.1.2"

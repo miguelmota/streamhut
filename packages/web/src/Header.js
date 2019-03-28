@@ -108,7 +108,7 @@ class Header extends Component {
                       width: '150px',
                       height: 'auto'
                     }}
-                    src="/assets/streamhut_bb.png"
+                    src="https://s3.amazonaws.com/assets.streamhut.io/streamhut_blu_blk.svg"
                     alt="Streamhut" />
                   </a>
 

@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import Tooltip from '@material-ui/core/Tooltip'
-import HelpIcon from '@material-ui/icons/HelpOutline';
 
 class HelpTooltip extends Component {
   render() {
@@ -9,7 +8,7 @@ class HelpTooltip extends Component {
         className="help-tooltip"
         title={this.props.text}
         aria-label={this.props.text}>
-        <HelpIcon style={this.props.iconStyle} />
+        <span style={this.props.iconStyle}>?</span>
       </Tooltip>
     )
   }

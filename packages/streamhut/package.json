@@ -1,22 +1,17 @@
 {
-  "name": "@streamhut/client",
-  "version": "0.0.1",
+  "name": "streamhut",
+  "version": "0.2.6",
   "description": "Stream and send data, terminal to web and vice versa.",
-  "main": "cli.js",
+  "main": "index.js",
   "bin": {
     "streamhut": "bin/streamhut"
   },
   "dependencies": {
-    "arraybuffer-mime": "0.0.5",
-    "commander": "^2.10.0",
-    "ws": "^6.1.2",
-    "@streamhut/server": "^0.0.1"
-  },
-  "devDependencies": {
-    "watchify": "^3.11.0"
+    "@streamhut/client": "^0.0.1"
   },
   "scripts": {
-    "test": "echo 'TODO'"
+    "test": "echo 'TODO'",
+    "copy": "cp -r ../web/build build"
   },
   "repository": {
     "type": "git",

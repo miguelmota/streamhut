@@ -1,6 +1,6 @@
 {
-  "name": "streamhut-server",
-  "version": "0.0.2",
+  "name": "@streamhut/server",
+  "version": "0.0.1",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "server.js",
   "dependencies": {
@@ -18,8 +18,7 @@
     "test": "echo 'TODO'",
     "start": "node index.js",
     "start:prod": "HOST_URL='https://streamhut.io' NET_PORT=1337 node index.js",
-    "build": "browserify ./static/scripts/client.js > ./static/scripts/bundle.js",
-    "watch": "watchify ./static/scripts/client.js -o ./static/scripts/bundle.js"
+    "copy": "cp -r ../web/build build"
   },
   "repository": {
     "type": "git",

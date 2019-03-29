@@ -7,7 +7,7 @@ const {
   arrayBufferMimeDecouple
 } = require('arraybuffer-mime')
 
-const { start } = require('../server/server')
+const { start } = require('@streamhut/server')
 const packageJson = require('./package.json')
 
 const hut = fs.readFileSync(path.resolve(__dirname, 'hut.txt'), 'utf8')

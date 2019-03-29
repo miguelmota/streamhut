@@ -17,17 +17,21 @@ import styled from 'styled-components'
 import prettysize from 'prettysize'
 import throttle from 'lodash/throttle'
 import ansi from 'ansi-styles'
+//import { Terminal } from 'xterm'
+//import * as fit from 'xterm/lib/addons/fit/fit';
+
+//Terminal.applyAddon(fit)
 
 const ESC_KEY = 27
 
 const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.close}`
 
-const gun = Gun('ws://localhost:8765/gun').get('abc1')
+const gun = Gun('ws://localhost:8765/gun').get('test')
 
 function createWs() {
     const {pathname, host, protocol}  = window.location
-    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
-    let wsurl = `ws://localhost:3001${pathname}`
+    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
+    //let wsurl = `ws://localhost:3001${pathname}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 
@@ -383,7 +387,7 @@ class Channel extends Component {
         cursorStyle: 'block',
         cursorBlink: true,
         drawBoldTextInBrightColors: true,
-        fontSize: 5
+        convertEol: true
       })
       let termNode = this.terminalRef.current
       termNode.style.display = 'block'
@@ -421,7 +425,7 @@ class Channel extends Component {
 
     this.ws.addEventListener(`open`, () => {
       console.log(`connected`)
-      this.readCachedMessages()
+      //this.readCachedMessages()
     })
 
     this.ws.addEventListener(`close`, () => {
@@ -489,7 +493,7 @@ class Channel extends Component {
   async readCachedMessages() {
     const messages = this.state.messages
     //const count = (await getCache('messages/count')).count
-    const count = 30
+    const count = 1
     if (count) {
       for (var i = 0; i < count; i++) {
         const k = 'messages/' + (i)

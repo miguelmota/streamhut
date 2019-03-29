@@ -2,6 +2,9 @@ all: build
 
 build: build/docker
 
+link:
+	@lerna link
+
 bootstrap:
 	@lerna bootstrap
 
@@ -11,8 +14,12 @@ test:
 cli:
 	@node packages/client/cli.js --help
 
+streamhut:
+	@node packages/streamhut --help
+
 server:
 	@(cd packages/server && HOST_URL='http://localhost:3000' PORT=3001 NET_PORT=1337 npm start)
+	#lerna run start --stream --scope "@streamhut/server"
 
 web:
 	@(cd packages/web && npm start)

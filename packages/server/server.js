@@ -40,20 +40,13 @@ function getRandUnusedPath() {
 function callback(req, res) {
   const pathname = req.url
 
-  // index
-  if (/^\/$/.test(pathname)) {
-    const Location = getRandUnusedPath()
-
-    res.writeHead(301, {Location})
-    res.end()
-    return
-  }
-
   // assets
   if (/\.+/.test(pathname)) {
     ecstatic.apply(this, arguments)
   } else {
-    const stream = fs.createReadStream(path.resolve(__dirname, '..', 'web/build/index.html'))
+    // index
+    //const stream = fs.createReadStream(path.resolve(__dirname, '..', 'web/build/index.html'))
+    const stream = fs.createReadStream(path.resolve(__dirname, '.', 'build/index.html'))
     stream.pipe(res)
   }
 }

@@ -1,0 +1,5 @@
+ossl
+radata
+radata*
+*.tmp
+.DS_Store

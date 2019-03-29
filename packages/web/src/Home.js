@@ -49,7 +49,7 @@ class Home extends Component {
         <UI.Main id="site-container">
           <UI.Hero>
             <div>
-              <img src="https://s3.amazonaws.com/assets.streamhut.io/streamhut_bb.png" alt="logo" />
+              <img src="https://s3.amazonaws.com/assets.streamhut.io/streamhut_blu_blk.png" alt="logo" />
             </div>
           </UI.Hero>
           <UI.Example>

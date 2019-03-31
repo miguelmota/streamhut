@@ -15,6 +15,9 @@ const UI = {
       width: 100%;
       max-width: 300px;
       height: auto;
+      @media (max-width: 500px) {
+        max-width: 200px;
+      }
     }
   `,
   Container: styled.div`
@@ -25,20 +28,29 @@ const UI = {
     background: #293238;
     justify-content: center;
     padding: 5em 2em;
+    @media (max-width: 500px) {
+      padding: 3em 1em;
+    }
 
     div {
-      width: 100%;
       text-align: center;
       background: #151d21;
       padding: 2em;
       border-radius: 1em;
       border: 1px solid #34434a;
       max-width: 500px;
+      @media (max-width: 500px) {
+        padding: 1em;
+        border-radius: 0.4em;
+      }
     }
 
     pre {
       color: #fff;
       font-size: 1.3em;
+      @media (max-width: 500px) {
+        font-size: 0.8em;
+      }
     }
   `,
 }

@@ -36,6 +36,10 @@ body::-webkit-scrollbar-thumb:hover {
   border: 1px solid #777;
 }
 
+#root {
+  min-width: 280px;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
@@ -53,6 +57,32 @@ textarea {
   border-radius: 5px;
   padding: 1em;
   font-family: Verdana,Geneva,sans-serif;
+}
+
+@media (max-width: 500px) {
+  input[type="color"],
+  input[type="date"],
+  input[type="datetime"],
+  input[type="datetime-local"],
+  input[type="email"],
+  input[type="month"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="text"],
+  input[type="time"],
+  input[type="url"],
+  input[type="week"],
+  select:focus,
+  textarea {
+    font-size: 16px; /* minimum font-size so iOS doesn't zoom in */
+  }
+}
+
+details:focus,
+summary:focus {
+  outline: 0;
 }
 
 button {
@@ -96,17 +126,10 @@ a:focus,
   outline: 0;
 }
 
-#header code {
-    background: #f9f9f9;
-    padding: 0.2em;
-    border-radius: 4px;
-}
-
 #form textarea,
 #form input[type="text"] {
   width: 100%;
   margin: 0 0 10px 0;
-  font-size: 12px;
 }
 
 textarea:focus,
@@ -162,6 +185,12 @@ input[type="text"]:focus {
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 10px rgba(151,164,175,.1);
+}
+
+@media (max-width: 500px) {
+  #output {
+    padding: 0;
+  }
 }
 
 #output textarea {
@@ -227,8 +256,8 @@ input[type="text"]:focus {
   font-family: "Menlo", "DejaVu Sans Mono", "Lucida Console", monospace;
 }
 
-.terminal-full-screen {
-  font-size: 1em;
+.terminal .xterm-viewport {
+  overflow-y: auto;
 }
 
 .xterm-viewport::-webkit-scrollbar {
@@ -264,6 +293,18 @@ body.fullscreen #terminal {
   max-height: 100%;
   z-index: 1;
   margin: 0;
+}
+
+.help-tooltip {
+  border-radius: 10em;
+  width: 1.3em;
+  height: 1.3em;
+  border: 1px solid #6e6e6e;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1em;
 }
 
 @media (max-width: 760px) {

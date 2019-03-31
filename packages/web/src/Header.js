@@ -14,6 +14,18 @@ const UI = {
     background: #efefef;
     box-shadow: 0 1px 10px rgba(151,164,175,.1);
     padding: 1em;
+    @media (max-width: 500px) {
+      flex-direction: column;
+    }
+  `,
+  HeaderGroup: styled.hgroup`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    @media (max-width: 500px) {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   `,
   Title: styled.h1`
     font-size: 2em;
@@ -22,20 +34,30 @@ const UI = {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    @media (max-width: 500px) {
+      margin-bottom: 0.5em;
+      align-items: flex-start;
+      .tooltip {
+        display: none;
+      }
+    }
   `,
-  UL: styled.li`
+  UL: styled.ul`
     list-style: none;
+    padding-bottom: 0.8em;
   `,
   LI: styled.li`
-    margin-bottom: 0.4em;
+    margin-bottom: 0.3em;
   `,
   Channel: styled.div`
+    width: 100%;
     margin-left: 2em;
+    max-width: 17em;
     a {
-      font-size: 12px;
+      font-size: 0.8em;
     }
     label {
-      font-size: 12px;
+      font-size: 0.8em;
       margin-right: 0.4em;
       display: block;
       font-size: 0.7em;
@@ -45,6 +67,12 @@ const UI = {
     }
     .tooltip {
       margin-left: 0.2em;
+    }
+    small {
+      margin-left: 2em;
+    }
+    @media (max-width: 500px) {
+      margin-left: 0;
     }
   `,
   ShareUrlInput: styled.input`
@@ -56,12 +84,68 @@ const UI = {
       border-color: #ccc;
       cursor: pointer;
     }
+    @media (max-width: 500px) {
+      width: 100%;
+      max-width: 300px;
+    }
+  `,
+  Examples: styled.div`
+    width: 100%;
+    display: flex;
+    padding: 0.5em 0.5em 0.5em 2em;
+    font-size: 0.6em;
+    color: #222;
+    line-height: 1.4;
+    label {
+      display: inline-block;
+      width: 60px;
+      font-weight: 600;
+      text-align: right;
+      padding-right: 0.5em;
+      font-size: 1.2em;
+      @media (max-width: 780px) {
+        width: auto;
+      }
+    }
+    code {
+      background: #405a6b;
+      color: white;
+      padding: 0.4em;
+      border-radius: 2px;
+      display: inline-block;
+      width: 240px;
+      @media (max-width: 780px) {
+        width: auto;
+      }
+    }
+    details {
+      display: block;
+    }
+    summary {
+      font-size: 1.4em;
+      cursor: pointer;
+      margin-bottom: 0.5em;
+      color: #067df7;
+      span {
+        display: inline-block;
+      }
+      &:hover span {
+        text-decoration: underline;
+      }
+    }
+    @media (max-width: 720px) {
+      display: none;
+    }
   `
 }
 
 class Header extends Component {
   constructor(props) {
     super(props)
+
+    this.state = {
+      hostname: window.location.hostname
+    }
 
     this.shareUrl = React.createRef()
     this.copyHelpText = React.createRef()
@@ -88,17 +172,15 @@ class Header extends Component {
     event.currentTarget.select()
   }
 
+  selectCode(event) {
+    window.getSelection().selectAllChildren(event.currentTarget)
+  }
+
   render() {
     return (
         <UI.Header id="header">
           <MaxWidthContainer>
-            <hgroup
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}
-            >
+            <UI.HeaderGroup>
               <UI.Title>
                 <a
                   href="/"
@@ -114,23 +196,15 @@ class Header extends Component {
 
                   <Tooltip
                     className="tooltip"
-                    classes={{
-                      root: {
-                        backgroundColor: '#ffffff',
-                        color: 'rgba(0, 0, 0, 0.87)',
-                        fontSize: 14,
-                    }
-                    }}
                     title={
                       <React.Fragment>
                         <div>
                           <ul>
                             <li>Stream and send data; web to web, terminal to web, or web to terminal.</li>
-                            <li>Nothing is stored, only streamed.</li>
-                            <li>Refreshing the page or closing tab will erase local data.</li>
                             <li>Quickly share data and files between devices.</li>
                             <li>URL path names map to channels.</li>
                             <li>Anyone in the same channel can view what's streamed.</li>
+                            <li>Data is stored in your browser's local storage.</li>
                           </ul>
                         </div>
                       </React.Fragment>
@@ -146,7 +220,10 @@ class Header extends Component {
                 <label>Channel URL
                   <HelpTooltip
                     text="Share this URL for others to join and see your messages"
-                    iconStyle={{fontSize: '1.4em'}} />
+                    iconStyle={{
+                      fontSize: '0.8em',
+                      marginLeft: '0.2em'
+                    }} />
                   <small
                     ref={this.copyHelpText}
                   >click to copy</small>
@@ -167,28 +244,47 @@ class Header extends Component {
                   clipboardText={this.props.shareUrl} />
               </UI.Channel>
 
-              <div style={{
-                display: 'flex',
-                padding: '0.5em 0.5em 0.5em 2em',
-                fontSize: '0.6em',
-                color: '#222',
-                lineHeight: '1.4'
-              }}>
+              <UI.Examples>
                 <div>
+
+                <details>
+                  <summary><span>CLI examples</span></summary>
                   <UI.UL>
-                    <UI.LI>CUI.LI examples:</UI.LI>
-                    <UI.LI>Tail: $<code>tail -F file.log | nc streamhut.io 1337</code></UI.LI>
-                    <UI.LI>Tee: $<code>(echo -n; sleep 5; htop) | tee >(nc streamhut.io 1337)</code></UI.LI>
-                    <UI.LI>Pipe shell: $<code>exec > >(nc streamhut.io 1337) 2>&1</code></UI.LI>
+                    <UI.LI>
+                      <label>Tail:</label>
+                      <code
+                        onClick={event => this.selectCode(event)}
+                      >tail -F file.log | nc {this.state.hostname} 1337</code>
+                    </UI.LI>
+                    <UI.LI>
+                      <label>Tee</label>
+                      <code
+                        onClick={event => this.selectCode(event)}
+                      >(sleep 5; htop) | tee >(nc {this.state.hostname} 1337)</code>
+                    </UI.LI>
+                    <UI.LI>
+                      <label>Pipe shell:</label>
+                      <code
+                        onClick={event => this.selectCode(event)}
+                      >exec > >(nc {this.state.hostname} 1337) 2>&1</code>
+                    </UI.LI>
                     {/*
                     <UI.LI>Echo: <code>$ echo 'foo' | streamhut post -h streamhut.io -c mychannel</code></UI.LI>
                     <UI.LI>File: <code>$ streamhut post -h streamhut.io -c mychannel -f data.txt</code></UI.LI>
                     */}
-                    <li><a href="https://github.com/miguelmota/streamhut" target="_blank" rel="noopener noreferrer">Developer documentation</a> | <a href="https://github.com/miguelmota/streamhut/issues/new" target="_blank" rel="noopener noreferrer">Feedback</a></li>
                   </UI.UL>
+                  </details>
+                  <div>
+                    <a href="https://github.com/miguelmota/streamhut"
+                      target="_blank"
+                      rel="noopener noreferrer">Developer documentation</a> | <a
+                      href="https://github.com/miguelmota/streamhut/issues/new"
+                      target="_blank"
+                      rel="noopener noreferrer">Feedback</a>
+                    </div>
                 </div>
-              </div>
-            </hgroup>
+              </UI.Examples>
+            </UI.HeaderGroup>
           </MaxWidthContainer>
         </UI.Header>
     )

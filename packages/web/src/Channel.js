@@ -9,7 +9,6 @@ import Gun from 'gun'
 import moment from 'moment'
 import Header from './Header'
 import Clipboard from './Clipboard'
-//import MaxWidthContainer from './MaxWidthContainer'
 import DragAndDrop from './DragAndDrop'
 import Tag from './Tag'
 import randomstring from 'randomstring'
@@ -17,21 +16,18 @@ import styled from 'styled-components'
 import prettysize from 'prettysize'
 import throttle from 'lodash/throttle'
 import ansi from 'ansi-styles'
-//import { Terminal } from 'xterm'
-//import * as fit from 'xterm/lib/addons/fit/fit';
-
-//Terminal.applyAddon(fit)
 
 const ESC_KEY = 27
 
 const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.close}`
 
-const gun = Gun('ws://localhost:8765/gun').get('test')
+var gun = Gun('ws://localhost:8765/gun')
 
 function createWs() {
     const {pathname, host, protocol}  = window.location
     let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
     //let wsurl = `ws://localhost:3001${pathname}`
+    //let wsurl = `ws://192.168.86.96:3001${pathname}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 
@@ -52,7 +48,7 @@ function changeFavicon (uri) {
   const oldLink = document.getElementById('favicon')
 
   link.id = 'favicon'
-  link.rel = 'icon'
+  link.rel = 'shortcut icon'
   link.href = uri
 
   if (oldLink) {
@@ -71,12 +67,12 @@ function updateWindowTitle () {
 }
 
 function resetWindowTitle() {
-  changeFavicon('/favicon.ico')
+  changeFavicon('https://s3.amazonaws.com/assets.streamhut.io/favicon.ico')
   document.title = 'Streamhut'
 }
 
 function newMessageWindowTitle() {
-  changeFavicon('/favicon_alert.ico')
+  changeFavicon('https://s3.amazonaws.com/assets.streamhut.io/favicon_alert.ico')
   document.title = '(new message) Streamhut'
 }
 
@@ -85,24 +81,6 @@ document.addEventListener('visibilitychange', () => {
     resetWindowTitle()
   }
 }, false)
-
-async function getCache(key) {
-  return new Promise((resolve) => {
-    gun.get(key).once((value, id) => {
-      console.log('GET', key, value)
-      try {
-        resolve(value)
-      } catch(err) {
-        resolve()
-      }
-    })
-  })
-}
-
-function putCache(key, value) {
-  console.log('PUT', key, value)
-  gun.get(key).put(value)
-}
 
 function genRandString() {
   return randomstring.generate({
@@ -132,6 +110,9 @@ const UI = {
     background: #efefef;
     padding: 10px;
     position: relative;
+    @media (max-width: 500px) {
+      flex-direction: column;
+    }
   `,
   FormGroup: styled.div`
     display: flex;
@@ -240,7 +221,7 @@ const UI = {
   /*background: #293238;*/
   TerminalContainer: styled.div`
     background-color: #000;
-    padding-bottom: 10px;
+    padding-bottom: 2em; /* same as resizer height */
     position: relative;
     width: 100%;
     height: auto;
@@ -264,7 +245,7 @@ const UI = {
   `,
   TerminalResizer: styled.div`
     width: 100%;
-    height: 10px;
+    height: 2em;
     position: absolute;
     bottom: 0;
     cursor: ns-resize;
@@ -276,6 +257,18 @@ const UI = {
     &:hover {
       background-color: #e6e6e6;
       border-color: #adadad;
+    }
+  `,
+  FullscreenButton: styled.button`
+    font-size: 1em;
+    span {
+      display: inline-block;
+    }
+    &:hover {
+      text-decoration: none;
+    }
+    &:hover span {
+      text-decoration: underline;
     }
   `
 }
@@ -291,7 +284,11 @@ class Channel extends Component {
       shareUrl: window.location.href,
       fullScreen: false,
       queuedFiles: [],
-      fsUrl: '',
+      fullScreenUrl: '',
+      terminalBlurred: true,
+      channel: window.location.pathname.substr(1),
+      terminalScrollable: false,
+      hostname: window.location.hostname
     }
 
     const urlParams = getUrlParams()
@@ -304,7 +301,7 @@ class Channel extends Component {
 
     this.msgSeq = 0
 
-    this.state.fsUrl = `${p}${q}${q.length ? '&' : '?'}f=1`
+    this.state.fullscreenUrl = `${p}${q}${q.length ? '&' : '?'}f=1`
 
     this.output = React.createRef()
     this.fileInput = React.createRef()
@@ -391,17 +388,18 @@ class Channel extends Component {
       })
       let termNode = this.terminalRef.current
       termNode.style.display = 'block'
-      this.term.open(termNode)
+      this.term.open(termNode, false)
+      this.blurTerminal()
       this.term.fit()
       window.addEventListener('resize', this.onWindowResize, false)
 
-      let cmd = green('exec > >(nc streamhut.io 1337) 2>&1')
+      let cmd = green(`exec>>>(nc ${this.state.hostname} 1337) 2>&1;echo \\#${this.state.channel}`)
       this.term.writeln(`To get started, run in your terminal:\n\n${cmd}\n`)
 
       this.setupTerminalResizer()
 
       this.term.on('blur', () => {
-        this.terminalRef.current.classList.add('blur')
+        this.blurTerminal()
       })
       this.term.on('key', (_, event) => {
         if (event.keyCode === ESC_KEY) {
@@ -437,11 +435,24 @@ class Channel extends Component {
         this.blurTerminal()
       }
     })
+
+    const xtermViewport = document.querySelector('.xterm-viewport')
+    xtermViewport.addEventListener('scroll', throttle(event => {
+      if (this.state.terminalScrollable) {
+        return
+      }
+      if (event.target.scrollHeight > event.target.clientHeight) {
+        this.setState({
+          terminalScrollable: true
+        })
+      }
+    }, 100))
   }
 
-  componentDidUnmount() {
+  componentWillUnmount() {
     let resizer = this.terminalResizerRef.current
     resizer.removeEventListener('mousedown', this.onTerminalResizer, false)
+    resizer.removeEventListener('touchstart', this.onTerminalResizer, false)
 
     window.removeEventListener('resize', this.onWindowResize, false)
   }
@@ -449,10 +460,16 @@ class Channel extends Component {
   focusTerminal() {
     this.terminalRef.current.classList.remove('blur')
     this.term.focus()
+    this.setState({
+      terminalBlurred: false
+    })
   }
 
   blurTerminal() {
     this.terminalRef.current.classList.add('blur')
+    this.setState({
+      terminalBlurred: true
+    })
   }
 
   onWindowResize = throttle(() => {
@@ -463,10 +480,12 @@ class Channel extends Component {
     if (event.offsetY < this.borderSize) {
       this.pos = event.y
       document.addEventListener('mousemove', this.resizeTerminal, false)
+      document.addEventListener('touchmove', this.resizeTerminal, false)
     }
   }
 
   resizeTerminal = throttle(event => {
+    console.log("HI")
     let container = this.terminalContainerRef.current
     let terminal = this.terminalRef.current
     const dy = this.pos - event.y
@@ -484,23 +503,25 @@ class Channel extends Component {
       this.pos = 0
 
       resizer.addEventListener('mousedown', this.onTerminalResizer, false)
+      resizer.addEventListener('touchend', this.onTerminalResizer, false)
 
       document.addEventListener('mouseup', event => {
         document.removeEventListener('mousemove', this.resizeTerminal, false)
+      }, false)
+      document.addEventListener('touchstart', event => {
+        document.removeEventListener('touchmove', this.resizeTerminal, false)
       }, false)
   }
 
   async readCachedMessages() {
     const messages = this.state.messages
-    //const count = (await getCache('messages/count')).count
-    const count = 1
-    if (count) {
-      for (var i = 0; i < count; i++) {
-        const k = 'messages/' + (i)
-        const msg = await getCache(k)
-        if (msg) {
-          this.handleIncomingMessage(msg)
-        }
+    const count = (await this.getCache('messages/count')) || 0
+    console.log("COUNT", count)
+    for (var i = 0; i < count; i++) {
+      const k = 'messages/' + (i)
+      const msg = await this.getCache(k)
+      if (msg) {
+        this.handleIncomingMessage(msg)
       }
     }
 
@@ -548,7 +569,7 @@ class Channel extends Component {
 
       if (data) {
         console.log("1", data)
-        putCache('messages/'+ this.msgSeq++, buf2hex(data))
+        this.putCache('messages/'+ this.incMsgSeq(), buf2hex(data))
       }
 
       const {mime, arrayBuffer} = arrayBufferMimeDecouple(data)
@@ -601,6 +622,12 @@ class Channel extends Component {
       }
 
       this.scrollToLatestMessages()
+    }
+
+    incMsgSeq() {
+      this.msgSeq++
+      this.putCache('messages/count', this.msgSeq)
+      return this.msgSeq
     }
 
     scrollToLatestMessages() {
@@ -742,11 +769,30 @@ class Channel extends Component {
     })
   }
 
+  async getCache(key) {
+    return new Promise((resolve) => {
+      gun.get(this.state.channel).get(key).once((value, id) => {
+        try {
+          resolve(value)
+        } catch(err) {
+          resolve()
+        }
+      })
+    })
+  }
+
+  putCache(key, value) {
+    console.log('PUT', key, value)
+    gun.get(this.state.channel).get(key).put(value)
+  }
+
   render() {
     let messages = <UI.NoMessages>no messages</UI.NoMessages>
     if (this.state.messages.length) {
       messages = this.state.messages.map(x => this.renderMessage(x))
     }
+
+    const { terminalBlurred, terminalScrollable } = this.state
 
     return (
       <UI.SiteContainer id="site-container">
@@ -770,13 +816,31 @@ class Channel extends Component {
             }}
             ref={this.terminalRef} />
           <UI.TerminalFooter>
-            <a
-              href={this.state.fsUrl}
-              className="link terminal-full-screen"
-              rel="noopener noreferrer"
-            >
-              fullscreen
-            </a>
+            {(terminalBlurred && terminalScrollable) && <div
+              style={{
+                display: 'inline-block',
+                color: '#fff',
+                marginRight: '1em',
+                fontSize: '0.8em',
+                opacity: '0.5'
+              }}>
+              click to scroll terminal
+              </div>}
+            {!terminalBlurred && <div
+              style={{
+                display: 'inline-block',
+                color: '#fff',
+                marginRight: '1em',
+                fontSize: '0.8em',
+                opacity: '0.5'
+              }}>
+              ESC to focus out
+            </div>
+            }
+            <UI.FullscreenButton
+              className="link">
+              <span>fullscreen</span> ⤢
+            </UI.FullscreenButton>
           </UI.TerminalFooter>
           <UI.TerminalResizer
             ref={this.terminalResizerRef}

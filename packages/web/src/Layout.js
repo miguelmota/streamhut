@@ -6,7 +6,7 @@ class Layout extends Component {
     return (
         [
           this.props.children,
-          <Footer />
+          <Footer key="footer" />
         ]
     )
   }

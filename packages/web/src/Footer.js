@@ -11,16 +11,23 @@ const UI = {
     text-align: right;
     width: 100%;
     background: #293238;
+    align-items: start;
   `,
   Container: styled.footer`
     display: flex;
     justify-content: space-between;
+    @media (max-width: 500px) {
+      flex-direction: column;
+    }
   `,
   Copyright: styled.div`
     font-weight: bold;
     display: flex;
     align-items: center;
-    color: #b1b1b1;
+    color: #547184;
+    @media (max-width: 500px) {
+      margin-bottom: 1em;
+    }
   `,
   Social: styled.div`
     display: flex;
@@ -29,7 +36,15 @@ const UI = {
     a {
       display: inline-flex;
       align-items: center;
-      margin-left: 1em;
+      margin: 0 0 0 1em;
+      color: #9e9e9e;
+    }
+    @media (max-width: 500px) {
+      flex-direction: column;
+      align-items: flex-start;
+      a {
+        margin: 0 0 0.5em 0;
+      }
     }
   `
 }
@@ -43,13 +58,13 @@ class Footer extends Component {
           <MaxWidthContainer>
             <UI.Container>
               <UI.Copyright>
-                © {year} <img
+                © {year} <a href="/"><img
                   style={{
                     width: '100px',
                     marginLeft: '0.4em'
                   }}
-                  src="/assets/streamhut_gray.png"
-                  alt="Streamhut" />
+                  src="https://s3.amazonaws.com/assets.streamhut.io/streamhut_blu-gry_400.png"
+                  alt="Streamhut" /></a>
               </UI.Copyright>
               <UI.Social>
                 <a

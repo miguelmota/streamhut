@@ -18,7 +18,7 @@ streamhut:
 	@node packages/streamhut --help
 
 server:
-	@(cd packages/server && HOST_URL='http://localhost:3000' PORT=3001 NET_PORT=1337 npm start)
+	@(cd packages/server && HOST_URL='http://localhost:3001' PORT=3001 NET_PORT=1337 npm start)
 	#lerna run start --stream --scope "@streamhut/server"
 
 web:
@@ -34,7 +34,7 @@ push/docker:
 	@docker push miguelmota/streamhut:latest
 
 start/docker:
-	@docker run NET_PORT=1337 -e PORT=8080 -p 8080:8080 -p 1337:1337 miguelmota/streamhut:latest
+	@docker run NET_PORT=1337 -e PORT=8080 -p 8080:8080 -p 1337:1337 -p 8765:8765 miguelmota/streamhut:latest
 
 start/docker/prod:
-	@docker run -e HOST_URL='https://streamhut.io' -e NET_PORT=1337 -e PORT=8080 -p 8080:8080 -p 1337:1337 --restart unless-stopped miguelmota/streamhut:latest
+	@docker run -e HOST_URL='https://streamhut.io' -e NET_PORT=1337 -e PORT=8080 -p 8080:8080 -p 1337:1337 -p 8765:8765 --restart unless-stopped miguelmota/streamhut:latest

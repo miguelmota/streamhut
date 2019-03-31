@@ -2,7 +2,7 @@
   "name": "@streamhut/server",
   "version": "0.0.1",
   "description": "Stream and send data, terminal to web and vice versa.",
-  "main": "server.js",
+  "main": "src/index.js",
   "dependencies": {
     "arraybuffer-mime": "0.0.5",
     "ecstatic": "^3.2.0",
@@ -16,7 +16,7 @@
   },
   "scripts": {
     "test": "echo 'TODO'",
-    "start": "node index.js",
+    "start": "node .",
     "start:prod": "HOST_URL='https://streamhut.io' NET_PORT=1337 node index.js",
     "copy": "cp -r ../web/build build"
   },

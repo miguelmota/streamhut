@@ -5,7 +5,6 @@ import {
   arrayBufferMimeDecouple
 } from 'arraybuffer-mime'
 
-import Gun from 'gun'
 import moment from 'moment'
 import Header from './Header'
 import Clipboard from './Clipboard'
@@ -21,13 +20,10 @@ const ESC_KEY = 27
 
 const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.close}`
 
-var gun = Gun('ws://localhost:8765/gun')
-
 function createWs() {
     const {pathname, host, protocol}  = window.location
-    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
-    //let wsurl = `ws://localhost:3001${pathname}`
-    //let wsurl = `ws://192.168.86.96:3001${pathname}`
+    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
+    let wsurl = `ws://localhost:3001/ws/s/${pathname.substr(3)}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 
@@ -248,7 +244,7 @@ const UI = {
     height: 2em;
     position: absolute;
     bottom: 0;
-    cursor: ns-resize;
+    cursor: row-resize;
     background-color: #efefef;
     border: 1px solid #cacaca;
     text-align: center;
@@ -286,7 +282,7 @@ class Channel extends Component {
       queuedFiles: [],
       fullScreenUrl: '',
       terminalBlurred: true,
-      channel: window.location.pathname.substr(1),
+      channel: window.location.pathname.substr(3),
       terminalScrollable: false,
       hostname: window.location.hostname
     }
@@ -384,7 +380,6 @@ class Channel extends Component {
         cursorStyle: 'block',
         cursorBlink: true,
         drawBoldTextInBrightColors: true,
-        convertEol: true
       })
       let termNode = this.terminalRef.current
       termNode.style.display = 'block'
@@ -485,7 +480,6 @@ class Channel extends Component {
   }
 
   resizeTerminal = throttle(event => {
-    console.log("HI")
     let container = this.terminalContainerRef.current
     let terminal = this.terminalRef.current
     const dy = this.pos - event.y
@@ -511,21 +505,6 @@ class Channel extends Component {
       document.addEventListener('touchstart', event => {
         document.removeEventListener('touchmove', this.resizeTerminal, false)
       }, false)
-  }
-
-  async readCachedMessages() {
-    const messages = this.state.messages
-    const count = (await this.getCache('messages/count')) || 0
-    console.log("COUNT", count)
-    for (var i = 0; i < count; i++) {
-      const k = 'messages/' + (i)
-      const msg = await this.getCache(k)
-      if (msg) {
-        this.handleIncomingMessage(msg)
-      }
-    }
-
-    this.setState({messages})
   }
 
   sendArrayBuffer(arrayBuffer, mime) {
@@ -561,25 +540,18 @@ class Channel extends Component {
 
       updateWindowTitle()
 
-      console.log('data:', data)
+      //console.log('data:', data)
 
       function buf2hex(buffer) { // buffer is an ArrayBuffer
         return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
       }
 
-      if (data) {
-        console.log("1", data)
-        this.putCache('messages/'+ this.incMsgSeq(), buf2hex(data))
-      }
-
       const {mime, arrayBuffer} = arrayBufferMimeDecouple(data)
 
       console.log('received', mime)
-      console.log(arrayBuffer)
 
       if (mime === 'shell') {
         const text = new window.TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer))
-        console.log(text)
         this.term.write(text)
 
         return false
@@ -614,20 +586,12 @@ class Channel extends Component {
         const messages = this.state.messages
         messages.push(message)
 
-
-
         this.setState({
           messages
         })
       }
 
       this.scrollToLatestMessages()
-    }
-
-    incMsgSeq() {
-      this.msgSeq++
-      this.putCache('messages/count', this.msgSeq)
-      return this.msgSeq
     }
 
     scrollToLatestMessages() {
@@ -767,23 +731,6 @@ class Channel extends Component {
     this.setState({
       queuedFiles: list
     })
-  }
-
-  async getCache(key) {
-    return new Promise((resolve) => {
-      gun.get(this.state.channel).get(key).once((value, id) => {
-        try {
-          resolve(value)
-        } catch(err) {
-          resolve()
-        }
-      })
-    })
-  }
-
-  putCache(key, value) {
-    console.log('PUT', key, value)
-    gun.get(this.state.channel).get(key).put(value)
   }
 
   render() {

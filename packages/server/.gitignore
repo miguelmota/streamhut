@@ -3,3 +3,5 @@ radata
 radata*
 *.tmp
 .DS_Store
+
+db/db.sqlite3

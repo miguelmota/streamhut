@@ -1,7 +1,7 @@
 const config = require('./config')
-const tcpServer = require('./tcp_server')
 const httpServer = require('./http_server')
-const gundb = require('./gundb')
+const wsServer = require('./ws_server')
+const tcpServer = require('./tcp_server')
 
 function start(conf) {
   if (!conf) {
@@ -17,7 +17,6 @@ function start(conf) {
 
   httpServer.start()
   tcpServer.start()
-  gundb.start()
 }
 
 if (require.main === module) {

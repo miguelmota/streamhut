@@ -8,11 +8,11 @@ const {
 } = require('arraybuffer-mime')
 const { server } = require('./ws_server')
 const { netPort } = require('./config')
+const socks = require('./socks')
+const { readStreamLogs, insertStreamLog } = require('./db')
 const reservedWords = require('./reserved_words.json')
 
 process.setMaxListeners(0)
-
-const socks = {}
 
 function genRandString() {
   return randomstring.generate({
@@ -53,72 +53,6 @@ function getRandomChannel() {
   return location
 }
 
-function createSock (conn, pathname, clients=[]) {
-  if (!conn.id) {
-    conn.id = uuid()
-  }
-
-  clients.push(conn)
-
-  console.log(`connected ${conn.id} ${pathname}`)
-
-  const sendConnections = () => {
-    clients.forEach(client => {
-      client.send(JSON.stringify({
-        __server_message__: {
-        data: {
-          connectionId: client.id,
-          connections: clients.filter(x => (x.id !== client.id))
-          .map(x => ({id: x.id}))
-        }
-      }}))
-    })
-  }
-
-  sendConnections()
-
-  conn.on('message', data => {
-    console.log('received data')
-    //console.log('received: %s', data)
-    //console.log(`\n${pathname}\n---${data}---`)
-
-    clients.forEach(client => {
-      console.log(`Streaming to ${client.id} ${pathname}`)
-      client.send(data)
-    })
-  })
-  .on('close', () => {
-    console.log(`close ${conn.id}`)
-
-    const index = clients.reduce((index, client, i) => {
-      if (conn.id === client.id) {
-        return i
-      }
-
-      return index
-    }, -1)
-
-    if (index > -1) {
-      clients.splice(index, 1)
-    }
-
-    sendConnections()
-  })
-  .on('error', (error) => {
-    console.error(error)
-  })
-
-  return clients
-}
-
-const sock = server
-
-sock.on('connection', (conn, IncMsg) => {
-  const pathname = IncMsg.url.substr(1)
-  console.log('connected', pathname)
-
-  socks[pathname] = createSock(conn, pathname, socks[pathname])
-})
 
 const netConnections = {}
 
@@ -151,11 +85,11 @@ const netServer = net.createServer((socket) => {
     }
 
     netConnections[channel] = socket
-    const url = `${hostUrl}/${channel}`
+    const url = `${hostUrl}/s/${channel}`
     socket.write(`Streaming to: ${url}\n\r`)
   }, 5)
 
-  socket.on('data', (buffer) => {
+  socket.on('data', async (buffer) => {
     if (line == 0 && !expired) {
       let data = buffer.toString()
       if (data[0] === '#') {
@@ -169,13 +103,19 @@ const netServer = net.createServer((socket) => {
       }
     }
 
+    if (!channel) {
+      return
+    }
+
+    const mime = 'shell'
+    const abWithMime = arrayBufferWithMime(buffer.buffer, mime)
+    insertStreamLog(channel, buffer)
+
     const clients = socks[channel]
 
     if (clients) {
       clients.forEach(client => {
         console.log(`streaming to ${client.id} ${channel}`)
-        const mime = 'shell'
-        const abWithMime = arrayBufferWithMime(buffer.buffer, mime)
         client.send(abWithMime)
       })
     }

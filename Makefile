@@ -38,3 +38,12 @@ start/docker:
 
 start/docker/prod:
 	@docker run -e HOST_URL='https://streamhut.io' -e NET_PORT=1337 -e PORT=8080 -p 8080:8080 -p 1337:1337 -p 8765:8765 --restart unless-stopped miguelmota/streamhut:latest
+
+migrate:
+	@(cd packages/server/migration && make migrate)
+
+rollback:
+	@(cd packages/server/migration && make rollback)
+
+migrate/new:
+	@(cd packages/server/migration && rake db:new_migration name=$(NAME))

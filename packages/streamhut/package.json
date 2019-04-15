@@ -1,10 +1,11 @@
 {
   "name": "streamhut",
-  "version": "0.2.6",
+  "version": "0.2.5",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "index.js",
   "bin": {
-    "streamhut": "bin/streamhut"
+    "streamhut": "bin/streamhut",
+    "khio": "bin/streamhut"
   },
   "dependencies": {
     "@streamhut/client": "^0.0.1"

@@ -14,10 +14,13 @@
 
 ## Synopsis
 
-- Nothing is stored; only streamed.
+- Stream your terminal to anyone without installing anything.
 - Originally created this to quickly share data and files between devices.
 - Path names map to channels.
 - Anyone in the same channel can view what's streamed.
+- Easily self-host your own streamhut server.
+
+**Disclaimer: This software is alpha quality and not production ready. Use at your own risk.**
 
 ## Demo
 
@@ -216,6 +219,12 @@ $ make web
 ```bash
 npm test
 ```
+
+## FAQ
+
+- Q: How is the stream log data stored?
+
+  - A: Currently it's stored in a local sqlite3 database.
 
 ## License
 

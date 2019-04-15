@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "index.js",
-  "bin": {
-    "streamhut": "packages/client/bin/streamhut"
-  },
   "devDependencies": {
     "lerna": "^3.13.1"
   },

@@ -193,9 +193,18 @@ Post a message to the channel:
 ```bash
 $ echo 'hello' | streamhut post -h 127.0.0.1 -n -p 1336 -c yo
 posting data to ws://streamhut.io/yo:
-```
 
 hello
+```
+
+## Docker
+
+You can run streamhut as a docker container:
+
+```bash
+docker pull miguelmota/streamhut
+docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 -e HOST_URL='https://example.com' --restart unless-stopped miguelmota/streamhut:latest
+```
 
 ## Development
 
@@ -224,7 +233,11 @@ npm test
 
 - Q: How is the stream log data stored?
 
-  - A: Currently it's stored in a local sqlite3 database.
+  - A: Currently it's stored in a local sqlite3 database. More robust and scalable options are in the works.
+
+- Q: Are there plans to rewrite streamhut in other languages?
+
+  - A: Yes! A Golang implementation is in the works.
 
 ## License
 

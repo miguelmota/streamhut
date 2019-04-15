@@ -1,7 +1,6 @@
 FROM node:10
 
-WORKDIR /app
-COPY . /app
-RUN npm i
+WORKDIR /
+RUN npm install -g streamhut --unsafe-perm
 
-CMD ["node", "packages/client/bin/streamhut", "server"]
+CMD ["streamhut", "server"]

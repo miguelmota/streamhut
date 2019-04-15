@@ -20,6 +20,7 @@
     "watchify": "^3.11.0"
   },
   "scripts": {
+    "prepublish": "cp ../web/build/ build/",
     "test": "echo 'TODO'",
     "start": "node .",
     "start:prod": "HOST_URL='https://streamhut.io' NET_PORT=1337 node index.js",

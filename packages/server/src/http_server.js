@@ -29,6 +29,11 @@ app.get(/^(\/|\/s\/\w+)$/, function(req, res) {
   res.sendFile(path.resolve(__dirname, '..', 'build/index.html'))
 })
 
+// redirect "/{channel}" to "/s/{channel}"
+app.get(/^\/(\w+)$/, function(req, res) {
+  res.redirect(`/s/${req.params[0]}`)
+})
+
 const server = http.createServer(app)
 
 function start() {

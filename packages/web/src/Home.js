@@ -271,6 +271,27 @@ const UI = {
       color: #696f77;
     }
   `,
+  Cast: styled.div`
+    background: #0e172a;
+    justify-content: center;
+    flex-direction: column;
+    div div {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    p {
+      max-width: 600px;
+      font-size: 1.2em;
+      color: #b4bdd0;
+      margin: 0 auto;
+      padding: 0.5em;
+      font-weight: 500;
+      background: #060c19;
+    }
+    img {
+      width: 100%;
+    }
+  `
 }
 
 class Home extends Component {
@@ -326,6 +347,18 @@ class Home extends Component {
             <pre>
             </pre>
           </UI.Example2>
+          <UI.Cast>
+            <div>
+              <p>streamhut in action:</p>
+            </div>
+            <div>
+              <div>
+                <img
+                  src="https://s3.amazonaws.com/assets.streamhut.io/streamhut_demo_1.gif"
+              alt="screencast" />
+              </div>
+            </div>
+          </UI.Cast>
           <UI.UseCases id="use-cases">
             <div>
               <p>Use cases for streamhut:</p>

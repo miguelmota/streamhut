@@ -29,8 +29,8 @@ const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.close}`
 
 function createWs(channel) {
     const {host, protocol}  = window.location
-    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}/ws/s/${channel}`
-    //let wsurl = `ws://localhost:3001/ws/s/${channel}`
+    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}/ws/s/${channel}`
+    let wsurl = `ws://localhost:3001/ws/s/${channel}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 
@@ -312,7 +312,7 @@ class Channel extends Component {
     let p = window.location.pathname
     let q = window.location.search
 
-    this.msgSeq = 0
+    this.lineNumber = 0
 
     this.state.fullscreenUrl = `${p}${q}${q.length ? '&' : '?'}f=1`
 
@@ -713,10 +713,15 @@ class Channel extends Component {
       console.log('received', mime)
 
       if (mime === 'shell') {
-        const text = new window.TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer))
+        let text = new window.TextDecoder('utf-8').decode(new Uint8Array(arrayBuffer))
+        /*
+        text = text.replace(/(\r\n|\n\r|\n|\r)/g, (match, p1, offset, string) => {
+          return green(`${p1}${`${(this.lineNumber++)}`.padEnd(4)} `)
+        })
+        */
         this.term.write(text)
 
-        return false
+        return
       }
 
       const blob = new Blob([arrayBuffer], {type: mime})

@@ -239,6 +239,16 @@ npm test
 
   - A: Yes! A Golang implementation is in the works.
 
+- Q: Can the same channel be used more than once?
+
+  - A: Yes! send `#{channel}` (ie `#mychannel`) as the first stream text to use that channel.
+
+    Example:
+
+    ```bash
+    exec > >(nc streamhut.io 1337) 2>&1;echo \#mychannel
+    ```
+
 ## License
 
 [MIT](LICENSE)

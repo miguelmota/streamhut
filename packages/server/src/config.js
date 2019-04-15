@@ -1,5 +1,5 @@
-const port = parseInt(process.env.PORT || 8956, 10)
-const netPort = parseInt(process.env.NET_PORT || (port + 1), 10)
+const port = parseInt(process.env.PORT, 10) || 9000
+const netPort = parseInt(process.env.NET_PORT, 10) || 1337
 
 module.exports.port = port
 module.exports.netPort = netPort

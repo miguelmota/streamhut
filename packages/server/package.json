@@ -1,6 +1,6 @@
 {
   "name": "@streamhut/server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "src/index.js",
   "dependencies": {
@@ -8,6 +8,8 @@
     "ecstatic": "^3.2.0",
     "express": "^4.16.4",
     "express-ws": "^4.0.0",
+    "moment": "^2.24.0",
+    "moment-timezone": "^0.5.23",
     "randomstring": "^1.0.3",
     "sqlite3": "^4.0.6",
     "uuid": "^3.1.0",

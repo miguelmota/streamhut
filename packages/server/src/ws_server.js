@@ -11,6 +11,13 @@ const {
   insertStreamLog,
   insertStreamMessage
 } = require('./db')
+const moment = require('moment-timezone')
+
+const sleep = t => new Promise(resolve => setTimeout(()=>resolve(),t))
+
+function toUnix(date) {
+  return moment.tz(date.toString(), 'YYYY-MM-DD HH:mm:ss', 'UTC').unix()
+}
 
 function createSock (conn, pathname, clients=[]) {
   if (!conn.id) {
@@ -32,11 +39,26 @@ function createSock (conn, pathname, clients=[]) {
         }
       }}))
 
+      // TODO: read from ws
+      const play = false
+
       ;(async ()=> {
         var logs = await readStreamLogs(pathname)
         if (logs) {
           for (var i = 0; i < logs.length; i++) {
             const mime = 'shell'
+            if (play) {
+              let date1 = null
+              if (i > 0) {
+                date1 = toUnix(logs[i-1].created_at)
+              }
+              let date2 = toUnix(logs[i].created_at)
+              if (i == 0) {
+                date1 = date2
+              }
+              let elapsed = date2 - date1
+              await sleep(elapsed*1e3)
+            }
             const abWithMime = arrayBufferWithMime(logs[i].data, mime)
             client.send(abWithMime)
           }

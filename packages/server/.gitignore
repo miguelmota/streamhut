@@ -5,3 +5,4 @@ radata*
 .DS_Store
 
 db/db.sqlite3
+!db/db.example.sqlite3

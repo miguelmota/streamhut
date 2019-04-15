@@ -7,16 +7,17 @@ const {
   arrayBufferWithMime,
 } = require('arraybuffer-mime')
 const { server } = require('./ws_server')
-const { netPort } = require('./config')
+const { port, netPort } = require('./config')
 const socks = require('./socks')
-const { readStreamLogs, insertStreamLog } = require('./db')
-const reservedWords = require('./reserved_words.json')
+const { insertStreamLog } = require('./db')
+const { isValidChannelName, normalizeChannel, isReservedKeyword } = require('./helpers')
+const url = require('url')
 
 process.setMaxListeners(0)
 
 function genRandString() {
   return randomstring.generate({
-    length: 3,
+    length: 6,
     charset: 'alphabetic',
     capitalization: 'lowercase',
     readable: true
@@ -27,20 +28,6 @@ function channelTaken(s) {
   return !!socks[s]
 }
 
-function isReserved(s) {
-  s = s.toLowerCase().trim()
-  return reservedWords.indexOf(s) > -1
-}
-
-function normalizeChannel(s) {
-  s = s.toLowerCase().trim()
-  if (isReserved(s)) {
-    s = s+'1'
-  }
-
-  return s
-}
-
 function getRandomChannel() {
   let location = null
 
@@ -48,11 +35,27 @@ function getRandomChannel() {
   do {
     const randString = genRandString()
     location = randString
-  } while (socks[location] && !isReserved(location))
+  } while (socks[location] && !isValidChannelName(location))
 
   return location
 }
 
+function getShareUrl(address, port, channel) {
+  address = address.split(':').splice(-1, 1)[0]
+
+  if (!address || address === '1') {
+    address = '127.0.0.1'
+  }
+
+  const hostUrl = process.env.HOST_URL || `http://${address}:${port}`
+  const {protocol,host} = url.parse(hostUrl)
+  let pathname = `s/${channel}`
+  if (host === 'stream.ht') {
+    pathname = channel
+  }
+
+  return `${protocol}//${host}/${pathname}`
+}
 
 const netConnections = {}
 
@@ -65,13 +68,6 @@ const netServer = net.createServer((socket) => {
   let channel = null
 
   const info = socket.address()
-  let address = info.address.split(':').splice(-1, 1)[0]
-
-  if (!address || address === '1') {
-    address = '127.0.0.1'
-  }
-
-  const hostUrl = process.env.HOST_URL || `http://${address}:${port}`
 
   socket.pipe(socket)
 
@@ -85,8 +81,8 @@ const netServer = net.createServer((socket) => {
     }
 
     netConnections[channel] = socket
-    const url = `${hostUrl}/s/${channel}`
-    socket.write(`Streaming to: ${url}\n\r`)
+    const shareUrl = getShareUrl(info.address, port, channel)
+    socket.write(`streamhut: streaming to ${shareUrl}\n\r`)
   }, 5)
 
   socket.on('data', async (buffer) => {
@@ -97,6 +93,11 @@ const netServer = net.createServer((socket) => {
         const matches = data.match(re)
         if (matches.length > 1) {
           channel = normalizeChannel(matches[1])
+          if (!isValidChannelName(channel)) {
+            socket.write(`streamhut: channel name "${channel}" is not available`)
+            socket.end()
+            return
+          }
           line++
           return
         }

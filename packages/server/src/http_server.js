@@ -19,11 +19,13 @@ app.get('/api/v1/stream/:channel', (req, res) => {
   res.json({'foo':"bar"})
 })
 
-app.get('/', function(req, res) {
-  res.sendFile(path.resolve(__dirname, '..', 'build/index.html'))
-})
+// "/" or "/s/:channel"
+app.get(/^(\/|\/s\/\w+)$/, function(req, res) {
+  if (req.url.indexOf('.websocket') > 0) {
+    res.sendStatus(200)
+    return
+  }
 
-app.get('/s/.*', function(req, res) {
   res.sendFile(path.resolve(__dirname, '..', 'build/index.html'))
 })
 

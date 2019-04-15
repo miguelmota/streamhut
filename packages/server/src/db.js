@@ -1,19 +1,18 @@
-var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('db/db.sqlite3');
+const fs = require('fs')
+const path = require('path')
+const sqlite3 = require('sqlite3').verbose()
 
-db.serialize(function() {
-  /*
-  db.each("SELECT rowid AS id, data FROM stream_logs", function(err, row) {
-      console.log(row.id, row.data);
-  });
-  */
-});
+const dbPath = path.resolve(__dirname, '..', 'db/db.sqlite3')
+const initialDbPath = path.resolve(__dirname, '..', 'db/db.example.sqlite3')
+if (!fs.existsSync(dbPath)) {
+  fs.createReadStream(initialDbPath).pipe(fs.createWriteStream(dbPath));
+}
 
-//db.close();
+const db = new sqlite3.Database(dbPath);
 
 module.exports.readStreamLogs = (handle) => {
   return new Promise((resolve) => {
-    db.all("SELECT rowid AS id, data FROM stream_logs WHERE stream_handle = ?", [handle], function(err, rows) {
+    db.all("SELECT rowid AS id, data, created_at FROM stream_logs WHERE stream_handle = ?", [handle], function(err, rows) {
       resolve(rows)
     });
   })
@@ -21,7 +20,7 @@ module.exports.readStreamLogs = (handle) => {
 
 module.exports.readStreamMessages = (handle) => {
   return new Promise((resolve) => {
-    db.all("SELECT rowid AS id, message, mime FROM stream_messages WHERE stream_handle = ?", [handle], function(err, rows) {
+    db.all("SELECT rowid AS id, message, mime, created_at FROM stream_messages WHERE stream_handle = ?", [handle], function(err, rows) {
       resolve(rows)
     });
   })

@@ -68,7 +68,7 @@ class Footer extends Component {
               </UI.Copyright>
               <UI.Social>
                 <a
-                  href="https://github.com/streamhut"
+                  href="https://github.com/miguelmota/streamhut"
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Github @streamhut">
@@ -76,7 +76,7 @@ class Footer extends Component {
                   Github
                 </a>
                 <a
-                  href="https://twitter.com/streamhut"
+                  href="https://twitter.com/miguelmotah"
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Twitter @streamhut">

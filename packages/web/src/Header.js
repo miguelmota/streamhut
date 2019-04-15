@@ -11,9 +11,9 @@ const UI = {
     margin: 0;
     display: flex;
     justify-content: space-between;
+    flex-direction: column;
     background: #efefef;
     box-shadow: 0 1px 10px rgba(151,164,175,.1);
-    padding: 1em;
     @media (max-width: 500px) {
       flex-direction: column;
     }
@@ -22,6 +22,7 @@ const UI = {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 1em;
     @media (max-width: 500px) {
       flex-direction: column;
       align-items: flex-start;
@@ -70,6 +71,7 @@ const UI = {
     }
     small {
       margin-left: 2em;
+      color: #bbb;
     }
     @media (max-width: 500px) {
       margin-left: 0;
@@ -90,8 +92,8 @@ const UI = {
     }
   `,
   Examples: styled.div`
-    width: 100%;
     display: flex;
+    width: 100%;
     padding: 0.5em 0.5em 0.5em 2em;
     font-size: 0.6em;
     color: #222;
@@ -113,13 +115,24 @@ const UI = {
       padding: 0.4em;
       border-radius: 2px;
       display: inline-block;
-      width: 240px;
+      width: 280px;
       @media (max-width: 780px) {
         width: auto;
       }
     }
     details {
       display: block;
+      button {
+        font-size: 1em;
+      }
+      &[open] {
+        summary div {
+          display: inline-block;
+        }
+        summary:hover span {
+          text-decoration: none;
+        }
+      }
     }
     summary {
       font-size: 1.4em;
@@ -129,6 +142,14 @@ const UI = {
       span {
         display: inline-block;
       }
+      div {
+        display: none;
+        float: right;
+        font-size: 1em;
+      }
+      button {
+        font-size: 0.8em;
+      }
       &:hover span {
         text-decoration: underline;
       }
@@ -136,6 +157,12 @@ const UI = {
     @media (max-width: 720px) {
       display: none;
     }
+  `,
+  Notice: styled.div`
+    font-size: 0.7em;
+    background: #dededa;
+    padding: 0.1em;
+}
   `
 }
 
@@ -144,7 +171,10 @@ class Header extends Component {
     super(props)
 
     this.state = {
-      hostname: window.location.hostname
+      hostname: window.location.hostname,
+      port: 1337,
+      showExampleWithChannel: false,
+      channel: window.location.pathname.substr(3)
     }
 
     this.shareUrl = React.createRef()
@@ -176,6 +206,13 @@ class Header extends Component {
     window.getSelection().selectAllChildren(event.currentTarget)
   }
 
+  toggleExampleWithChannel(event) {
+    event.preventDefault(event)
+    this.setState({
+      showExampleWithChannel: !this.state.showExampleWithChannel
+    })
+  }
+
   render() {
     return (
         <UI.Header id="header">
@@ -200,11 +237,10 @@ class Header extends Component {
                       <React.Fragment>
                         <div>
                           <ul>
-                            <li>Stream and send data; web to web, terminal to web, or web to terminal.</li>
+                            <li>Stream your terminal to anyone without installing anything.</li>
                             <li>Quickly share data and files between devices.</li>
                             <li>URL path names map to channels.</li>
                             <li>Anyone in the same channel can view what's streamed.</li>
-                            <li>Data is stored in your browser's local storage.</li>
                           </ul>
                         </div>
                       </React.Fragment>
@@ -219,7 +255,7 @@ class Header extends Component {
               <UI.Channel>
                 <label>Channel URL
                   <HelpTooltip
-                    text="Share this URL for others to join and see your messages"
+                    text="Share this URL with others to join and see your stream and messages"
                     iconStyle={{
                       fontSize: '0.8em',
                       marginLeft: '0.2em'
@@ -247,26 +283,50 @@ class Header extends Component {
               <UI.Examples>
                 <div>
 
-                <details>
-                  <summary><span>CLI examples</span></summary>
+                <details className={this.state.showExampleWithChannel ? 'random' : ''}>
+                  <summary>
+                    <span>CLI examples</span>
+                    <div>
+                      <button
+                        className="link"
+                        onClick={event => this.toggleExampleWithChannel(event)}>
+                        {this.state.showExampleWithChannel ? 'using random channel' : 'using specific channel'}
+                      </button>
+                    </div>
+                    </summary>
                   <UI.UL>
                     <UI.LI>
                       <label>Tail:</label>
+                      {this.state.showExampleWithChannel ?
+                        <code
+                          onClick={event => this.selectCode(event)}
+                        >nc {this.state.hostname} {this.state.port} &lt; &lt;(echo \#{this.state.channel}; tail -F data.log)</code>
+                      :
                       <code
                         onClick={event => this.selectCode(event)}
-                      >tail -F file.log | nc {this.state.hostname} 1337</code>
+                      >tail -F file.log | nc {this.state.hostname} {this.state.port}</code>}
                     </UI.LI>
                     <UI.LI>
                       <label>Tee</label>
+                      {this.state.showExampleWithChannel ?
                       <code
                         onClick={event => this.selectCode(event)}
-                      >(sleep 5; htop) | tee >(nc {this.state.hostname} 1337)</code>
+                      >(echo \#{this.state.channel}; htop) | tee >(nc {this.state.hostname} {this.state.port})</code>
+                      :
+                      <code
+                        onClick={event => this.selectCode(event)}
+                      >(sleep 5; htop) | tee >(nc {this.state.hostname} {this.state.port})</code>}
                     </UI.LI>
                     <UI.LI>
                       <label>Pipe shell:</label>
+                      {this.state.showExampleWithChannel ?
                       <code
                         onClick={event => this.selectCode(event)}
-                      >exec > >(nc {this.state.hostname} 1337) 2>&1</code>
+                      >exec > >(nc {this.state.hostname} {this.state.port}) 2>&1;echo \#{this.state.channel}</code>
+                      :
+                      <code
+                        onClick={event => this.selectCode(event)}
+                      >exec > >(nc {this.state.hostname} {this.state.port}) 2>&1</code>}
                     </UI.LI>
                     {/*
                     <UI.LI>Echo: <code>$ echo 'foo' | streamhut post -h streamhut.io -c mychannel</code></UI.LI>
@@ -277,15 +337,27 @@ class Header extends Component {
                   <div>
                     <a href="https://github.com/miguelmota/streamhut"
                       target="_blank"
-                      rel="noopener noreferrer">Developer documentation</a> | <a
-                      href="https://github.com/miguelmota/streamhut/issues/new"
+                      rel="noopener noreferrer">Developer documentation</a>
+                    <span> | </span>
+                    <a
+                      href="https://github.com/miguelmota/streamhut/issues/1"
                       target="_blank"
                       rel="noopener noreferrer">Feedback</a>
-                    </div>
+                  </div>
                 </div>
               </UI.Examples>
             </UI.HeaderGroup>
           </MaxWidthContainer>
+          <UI.Notice>
+            <MaxWidthContainer>
+              <strong>Notice:</strong> streamhut is alpha quality and storage might be reset. Use at your risk. <a
+                href="/#subscribe"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="subscribe"
+              >Subscribe</a> to get news and updates.
+            </MaxWidthContainer>
+          </UI.Notice>
         </UI.Header>
     )
   }

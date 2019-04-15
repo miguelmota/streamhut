@@ -13,8 +13,9 @@ body {
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", Verdana,Geneva,sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #000;
+  color: #222;
   font-size: 14px;
+  line-height: 1.4;
 }
 
 body::-webkit-scrollbar {
@@ -107,6 +108,9 @@ a:focus,
 .link:hover,
 .link:active,
 .link:focus {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
   color: #067df7;
   text-decoration: none;
   -webkit-appearance: none;
@@ -124,6 +128,10 @@ a:hover,
 a:focus,
 .link:focus {
   outline: 0;
+}
+
+a svg {
+  margin-right: 0.2em;
 }
 
 #form textarea,
@@ -152,14 +160,16 @@ input[type="text"]:focus {
   color: rgba(0,0,0,0.5);
 }
 
-#form button {
+.button,
+.button:hover
+.button:focus {
+  font-family: Verdana,Geneva,sans-serif;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
-  background: #fff;
   -webkit-appearance: none;
-  border-radius: 5px;
-  border-width: 2px;
-  border-style: solid;
-  padding: 15px 35px;
+  padding: 1.2em 2em;
   border-radius: 4px;
   outline: none;
   font-weight: 600;
@@ -172,6 +182,26 @@ input[type="text"]:focus {
   line-height: 1;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  text-decoration: none;
+}
+
+:root .button:hover {
+  background-color: #007fff;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #0062cc;
+  color: #fff;
+  text-decoration: none;
+}
+
+.button svg {
+  margin-right: 0.2em;
+}
+
+@media (max-width: 500px) {
+  .button {
+    font-size: 0.8em;
+  }
 }
 
 #output {
@@ -261,21 +291,33 @@ input[type="text"]:focus {
 }
 
 .xterm-viewport::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 12px;
+  height: 12px;
 }
 
 .xterm-viewport::-webkit-scrollbar-track {
-  background: #555;
+  background: #293238;
 }
 
 .xterm-viewport::-webkit-scrollbar-thumb {
-  background-color: #777;
-  border: 1px solid #777;
+  background-color: #496171;
+  border: 1px solid #496171;
 }
 
 .xterm-viewport::-webkit-scrollbar-thumb:hover {
-  background-color: #999;
+  background-color: #54748a;
+  border: 1px solid #6995b3;
+}
+
+.xterm.fullscreen {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: auto;
+    z-index: 255;
 }
 
 body.fullscreen {

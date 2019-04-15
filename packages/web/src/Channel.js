@@ -16,14 +16,21 @@ import prettysize from 'prettysize'
 import throttle from 'lodash/throttle'
 import ansi from 'ansi-styles'
 
+import { Terminal } from 'xterm';
+import * as fit from 'xterm/lib/addons/fit/fit';
+import * as fullscreen from 'xterm/lib/addons/fullscreen/fullscreen';
+
+Terminal.applyAddon(fit)
+Terminal.applyAddon(fullscreen)
+
 const ESC_KEY = 27
 
 const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.close}`
 
-function createWs() {
-    const {pathname, host, protocol}  = window.location
-    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}${pathname}`
-    let wsurl = `ws://localhost:3001/ws/s/${pathname.substr(3)}`
+function createWs(channel) {
+    const {host, protocol}  = window.location
+    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}/ws/s/${channel}`
+    //let wsurl = `ws://localhost:3001/ws/s/${channel}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 
@@ -159,7 +166,8 @@ const UI = {
     }
 
     img {
-      max-width: 500px;
+      object-fit: contain;
+      width: 100%;
     }
 
     header {
@@ -238,6 +246,11 @@ const UI = {
     align-items: center;
     justify-content: flex-end;
     padding: 0 1em;
+    color: #fff;
+    z-index: 1000;
+    &.fixed {
+      position: fixed;
+    }
   `,
   TerminalResizer: styled.div`
     width: 100%;
@@ -249,6 +262,7 @@ const UI = {
     border: 1px solid #cacaca;
     text-align: center;
     font-size: 0.5em;
+    line-height: 1.6;
     color: #797979;
     &:hover {
       background-color: #e6e6e6;
@@ -277,15 +291,18 @@ class Channel extends Component {
       text: '',
       file: null,
       messages: [],
-      shareUrl: window.location.href,
+      shareUrl: null,
       fullScreen: false,
       queuedFiles: [],
       fullScreenUrl: '',
       terminalBlurred: true,
       channel: window.location.pathname.substr(3),
       terminalScrollable: false,
-      hostname: window.location.hostname
+      hostname: window.location.hostname,
+      terminalPressedKey: null
     }
+
+    this.state.shareUrl = this.getShareUrl()
 
     const urlParams = getUrlParams()
     if ('f' in urlParams) {
@@ -306,8 +323,49 @@ class Channel extends Component {
     this.terminalResizerRef = React.createRef()
   }
 
+  getShareUrl() {
+    let protocol = window.location.protocol
+    let host = window.location.host
+    let pathname = `s/${this.state.channel}`
+    if (host === 'streamhut.io') {
+      host = 'stream.ht'
+      pathname = this.state.channel
+    }
+
+    return `${protocol}//${host}/${pathname}`
+  }
+
   setFullScreen() {
     document.body.classList.add('fullscreen')
+  }
+
+  showFullScreen(event) {
+    event.preventDefault()
+    //window.location.href = window.location.href + '?f=1'
+
+    this.term.toggleFullScreen(true)
+    let container = this.terminalContainerRef.current
+    let terminal = this.terminalRef.current
+    this.lastHeight = container.clientHeight
+    const offset = 125
+    container.style.height = window.outerHeight - offset + 'px'
+    terminal.style.height = window.outerHeight - this.borderSize - offset + 'px'
+    this.term.fit()
+    this.setState({
+      fullScreen: true
+    })
+  }
+
+  exitFullScreen() {
+    this.term.toggleFullScreen(false)
+    let container = this.terminalContainerRef.current
+    let terminal = this.terminalRef.current
+    container.style.height = this.lastHeight + this.borderSize + 'px'
+    terminal.style.height = this.lastHeight - this.borderSize + 'px'
+    this.term.fit()
+    this.setState({
+      fullScreen: false
+    })
   }
 
   handleInput() {
@@ -370,7 +428,7 @@ class Channel extends Component {
   }
 
   componentDidMount() {
-      this.term = new window.Terminal({
+      this.term = new Terminal({
         allowTransparency: false,
         bellStyle: 'none',
         bellSound: '',
@@ -386,9 +444,10 @@ class Channel extends Component {
       this.term.open(termNode, false)
       this.blurTerminal()
       this.term.fit()
+      this.termScrollArea = document.querySelector('.xterm-viewport')
       window.addEventListener('resize', this.onWindowResize, false)
 
-      let cmd = green(`exec>>>(nc ${this.state.hostname} 1337) 2>&1;echo \\#${this.state.channel}`)
+      let cmd = green(`exec > >(nc ${this.state.hostname} 1337) 2>&1;echo \\#${this.state.channel}`)
       this.term.writeln(`To get started, run in your terminal:\n\n${cmd}\n`)
 
       this.setupTerminalResizer()
@@ -402,7 +461,7 @@ class Channel extends Component {
         }
       })
 
-    this.ws = createWs();
+    this.ws = createWs(this.state.channel);
 
     /*
     const connectionsLog = document.querySelector(`#connections`)
@@ -425,14 +484,29 @@ class Channel extends Component {
       console.log(`connection closed`)
     })
 
-    document.addEventListener('keydown', event => {
+
+    window.term = this.term
+    this.lastKeyPress = null
+    this.lastKeyTimeout = null
+    window.addEventListener('keydown', throttle(event => {
       if (event.keyCode === ESC_KEY) {
         this.blurTerminal()
       }
-    })
 
-    const xtermViewport = document.querySelector('.xterm-viewport')
-    xtermViewport.addEventListener('scroll', throttle(event => {
+      this.handleNavigationKeys(event)
+      this.handleKeyPressLog(event)
+
+      this.lastKeyPress = event.key
+      clearTimeout(this.lastKeyTimeout)
+      this.lastKeyTimeout = setTimeout(() => {
+        this.lastKeyPress = null
+        this.setState({
+          terminalPressedKey: null
+        })
+      }, 1800)
+    }, true), 10)
+
+    this.termScrollArea.addEventListener('scroll', throttle(event => {
       if (this.state.terminalScrollable) {
         return
       }
@@ -444,10 +518,88 @@ class Channel extends Component {
     }, 100))
   }
 
+  handleNavigationKeys(event) {
+    if (!this.isTerminalBlurred()) {
+      if (event.key === 'j' || event.key === 'ArrowDown') {
+        this.terminalScrollDown()
+      }
+      if (event.key === 'k' || event.key === 'ArrowUp') {
+        this.terminalScrollUp()
+      }
+      if (event.key === 'u' && event.ctrlKey) {
+        this.terminalScrollPageUp()
+      }
+      if (event.key === 'd' && event.ctrlKey) {
+        this.terminalScrollPageDown()
+      }
+      if (event.key === 'g' && this.lastKeyPress === 'g') {
+        this.terminalScrollHome()
+      }
+      if (event.key == 'G' || (event.key === 'g' && event.shiftKey)) {
+        this.terminalScrollEnd()
+      }
+      if (event.key == 'H') {
+        this.terminalScrollPageHome()
+      }
+      if (event.key == 'L') {
+        this.terminalScrollPageEnd()
+      }
+      if (event.key == 'M') {
+        this.terminalScrollPageMiddle()
+      }
+    }
+  }
+
+  handleKeyPressLog(event) {
+    if (event.keyCode != 73) {
+      if (!this.isTerminalBlurred()) {
+        this.setState({
+          terminalPressedKey: `${event.ctrlKey ? 'ctrl-' : ''}${event.key}`
+        })
+      }
+    }
+  }
+
+  terminalScrollUp() {
+    this.term.scrollLines(-1)
+  }
+
+  terminalScrollDown() {
+    this.term.scrollLines(1)
+  }
+
+  terminalScrollPageUp() {
+    this.term.scrollPages(-1)
+  }
+
+  terminalScrollPageDown() {
+    this.term.scrollPages(1)
+  }
+
+  terminalScrollPageHome() {
+    this.term.scrollToLine(0)
+  }
+
+  terminalScrollPageEnd() {
+    this.term.scrollToLine(this.term.rows)
+  }
+
+  terminalScrollHome() {
+    this.term.scrollToTop()
+  }
+
+  terminalScrollEnd() {
+    this.term.scrollToBottom()
+  }
+
+  terminalScrollPageMiddle() {
+    this.term.scrollToLine(parseInt(this.term.rows/2, 10))
+  }
+
   componentWillUnmount() {
     let resizer = this.terminalResizerRef.current
     resizer.removeEventListener('mousedown', this.onTerminalResizer, false)
-    resizer.removeEventListener('touchstart', this.onTerminalResizer, false)
+    //resizer.removeEventListener('touchstart', this.onTerminalResizer, false)
 
     window.removeEventListener('resize', this.onWindowResize, false)
   }
@@ -461,10 +613,20 @@ class Channel extends Component {
   }
 
   blurTerminal() {
+    if (this.state.fullScreen) {
+      this.exitFullScreen()
+      return
+    }
+
     this.terminalRef.current.classList.add('blur')
     this.setState({
-      terminalBlurred: true
+      terminalBlurred: true,
+      terminalPressedKey: null
     })
+  }
+
+  isTerminalBlurred() {
+    return this.terminalRef.current.classList.contains('blur')
   }
 
   onWindowResize = throttle(() => {
@@ -475,7 +637,7 @@ class Channel extends Component {
     if (event.offsetY < this.borderSize) {
       this.pos = event.y
       document.addEventListener('mousemove', this.resizeTerminal, false)
-      document.addEventListener('touchmove', this.resizeTerminal, false)
+      //document.addEventListener('touchmove', this.resizeTerminal, false)
     }
   }
 
@@ -497,14 +659,14 @@ class Channel extends Component {
       this.pos = 0
 
       resizer.addEventListener('mousedown', this.onTerminalResizer, false)
-      resizer.addEventListener('touchend', this.onTerminalResizer, false)
+      //resizer.addEventListener('touchend', this.onTerminalResizer, false)
 
       document.addEventListener('mouseup', event => {
         document.removeEventListener('mousemove', this.resizeTerminal, false)
       }, false)
-      document.addEventListener('touchstart', event => {
-        document.removeEventListener('touchmove', this.resizeTerminal, false)
-      }, false)
+      //document.addEventListener('touchstart', event => {
+        //document.removeEventListener('touchmove', this.resizeTerminal, false)
+      //}, false)
   }
 
   sendArrayBuffer(arrayBuffer, mime) {
@@ -611,6 +773,9 @@ class Channel extends Component {
 
       if (/image/gi.test(mime)) {
         element = <a
+          style={{
+            maxWidth: '500px'
+          }}
           href={url}
           target="_blank"
           rel="noopener noreferrer"
@@ -762,11 +927,30 @@ class Channel extends Component {
               height: '350px'
             }}
             ref={this.terminalRef} />
-          <UI.TerminalFooter>
+          <UI.TerminalFooter className={this.state.fullScreen ? 'fixed' : ''}>
+            <div
+              style={{
+                display: 'inline-block',
+                marginRight: 'auto'
+              }}>
+            <div
+              style={{
+                display: 'inline-block',
+                fontSize: '0.6em',
+                opacity: '0.5',
+                marginRight: '1em',
+              }}>
+              READ-ONLY
+            </div>
+            <div style={{
+              display: 'inline-block',
+              fontSize: '0.8em',
+              opacity: '0.2'
+            }}>{this.state.terminalPressedKey}</div>
+            </div>
             {(terminalBlurred && terminalScrollable) && <div
               style={{
                 display: 'inline-block',
-                color: '#fff',
                 marginRight: '1em',
                 fontSize: '0.8em',
                 opacity: '0.5'
@@ -776,7 +960,13 @@ class Channel extends Component {
             {!terminalBlurred && <div
               style={{
                 display: 'inline-block',
-                color: '#fff',
+                marginRight: '1em',
+                fontSize: '0.8em',
+                opacity: '0.2'
+              }}>vim-shortcut keys enabled</div>}
+            {!terminalBlurred && <div
+              style={{
+                display: 'inline-block',
                 marginRight: '1em',
                 fontSize: '0.8em',
                 opacity: '0.5'
@@ -784,10 +974,18 @@ class Channel extends Component {
               ESC to focus out
             </div>
             }
+            {this.state.fullScreen ?
+              <UI.FullscreenButton
+                onClick={event => this.exitFullScreen()}
+                className="link">
+                <span>exit fullscreen</span>
+              </UI.FullscreenButton>
+            :
             <UI.FullscreenButton
+              onClick={event => this.showFullScreen(event)}
               className="link">
               <span>fullscreen</span> ⤢
-            </UI.FullscreenButton>
+            </UI.FullscreenButton>}
           </UI.TerminalFooter>
           <UI.TerminalResizer
             ref={this.terminalResizerRef}
@@ -843,6 +1041,7 @@ class Channel extends Component {
             <UI.FormGroup className="submit-form-group">
               <div>
                 <button
+                  className="button"
                   type="submit">
                   Send</button></div>
             </UI.FormGroup>

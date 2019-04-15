@@ -29,8 +29,8 @@ const green = t => `${ansi.greenBright.open}${t}${ansi.greenBright.close}`
 
 function createWs(channel) {
     const {host, protocol}  = window.location
-    //let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}/ws/s/${channel}`
-    let wsurl = `ws://localhost:3001/ws/s/${channel}`
+    let wsurl = `${protocol === 'https:' ? `wss` : `ws`}://${host}/ws/s/${channel}`
+    //let wsurl = `ws://localhost:3001/ws/s/${channel}`
     const ws = new WebSocket(wsurl)
     ws.binaryType = 'arraybuffer'
 

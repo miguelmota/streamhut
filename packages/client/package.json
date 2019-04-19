@@ -1,6 +1,6 @@
 {
   "name": "@streamhut/client",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "cli.js",
   "bin": {
@@ -10,7 +10,7 @@
     "arraybuffer-mime": "0.0.5",
     "commander": "^2.10.0",
     "ws": "^6.1.2",
-    "@streamhut/server": "^0.0.4"
+    "@streamhut/server": "^0.0.5"
   },
   "devDependencies": {
     "watchify": "^3.11.0"

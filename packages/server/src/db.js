@@ -3,12 +3,20 @@ const path = require('path')
 const sqlite3 = require('sqlite3').verbose()
 
 const dbPath = path.resolve(__dirname, '..', 'db/db.sqlite3')
-const initialDbPath = path.resolve(__dirname, '..', 'db/db.example.sqlite3')
-if (!fs.existsSync(dbPath)) {
-  fs.createReadStream(initialDbPath).pipe(fs.createWriteStream(dbPath));
-}
-
+const schemaPath = path.resolve(__dirname, '..', 'db/schema.sql')
 const db = new sqlite3.Database(dbPath);
+
+if (!fs.existsSync(dbPath)) {
+  db.serialize(function() {
+    const lines = fs.readFileSync(schemaPath, 'utf8').split('\n').filter(x => x)
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf('sqlite_sequence') > -1) {
+        continue
+      }
+      db.run(lines[i]);
+    }
+  })
+}
 
 module.exports.readStreamLogs = (handle) => {
   return new Promise((resolve) => {

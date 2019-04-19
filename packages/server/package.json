@@ -1,6 +1,6 @@
 {
   "name": "@streamhut/server",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Stream and send data, terminal to web and vice versa.",
   "main": "src/index.js",
   "dependencies": {

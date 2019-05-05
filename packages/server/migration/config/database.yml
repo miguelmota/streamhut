@@ -1,5 +1,0 @@
-development:
-  adapter: sqlite3
-  database: <%= ENV['DB_PATH'] %>
-  pool: 1
-  timeout: 1000

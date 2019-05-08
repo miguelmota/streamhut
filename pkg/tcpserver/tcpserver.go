@@ -24,54 +24,64 @@ import (
 
 // Server ...
 type Server struct {
-	host     string
-	listener net.Listener
-	port     uint
-	ws       *wsserver.WS
-	db       db.DB
+	host         string
+	listener     net.Listener
+	port         uint
+	ws           *wsserver.WS
+	db           db.DB
+	shareBaseURL string
 }
 
 // Config ...
 type Config struct {
-	Host string
-	Port uint
-	WS   *wsserver.WS
-	DB   db.DB
+	Host         string
+	Port         uint
+	WS           *wsserver.WS
+	DB           db.DB
+	ShareBaseURL string
 }
 
 // NewServer ...
 func NewServer(config *Config) *Server {
+	shareBaseURL := config.ShareBaseURL
+	if shareBaseURL != "" {
+		if !strings.HasSuffix(shareBaseURL, "/") {
+			shareBaseURL += "/"
+		}
+	}
+
 	return &Server{
-		host: config.Host,
-		port: config.Port,
-		ws:   config.WS,
-		db:   config.DB,
+		host:         config.Host,
+		port:         config.Port,
+		ws:           config.WS,
+		db:           config.DB,
+		shareBaseURL: shareBaseURL,
 	}
 }
 
 // Start ...
-func (s *Server) Start() {
+func (s *Server) Start() error {
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", s.host, s.port))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
 	defer listener.Close()
 	s.listener = listener
 
-	fmt.Printf("TCP port: %d\n", s.port)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		id := uuid.Must(uuid.NewV4(), nil)
-
 		client := &wsserver.Conn{
 			Channel: "",
 			Netconn: conn,
 			ID:      id.String(),
 		}
+
 		go s.handleRequest(client)
 	}
 }
@@ -131,8 +141,10 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 						if err := client.Netconn.Close(); err != nil {
 							log.Fatal(err)
 						}
+
 						continue
 					}
+
 					index++
 					continue
 				}
@@ -160,6 +172,7 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 						log.Fatal(err)
 					}
 				}
+
 				if cl.Wsconn != nil {
 					if err = cl.Wsconn.WriteMessage(websocket.BinaryMessage, bufferWithMime); err != nil {
 						log.Fatal(err)
@@ -171,6 +184,10 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 }
 
 func (s *Server) shareURL(client *wsserver.Conn) string {
+	if s.shareBaseURL != "" {
+		return fmt.Sprintf("%s%s", s.shareBaseURL, client.Channel)
+	}
+
 	host := s.host
 	if host == "" {
 		host = "127.0.0.1"
@@ -189,14 +206,15 @@ func (s *Server) shareURL(client *wsserver.Conn) string {
 	host = u.Host
 	protocol := u.Scheme
 	pathname := fmt.Sprintf("s/%s", client.Channel)
-	if host == "stream.ht" {
-		pathname = client.Channel
-	}
-
 	if !strings.HasSuffix(u.Path, "/") {
 		pathname = "/" + pathname
 	}
 
 	pathname = u.Path + pathname
 	return fmt.Sprintf("%s//%s%s", protocol, host, pathname)
+}
+
+// Port ...
+func (s *Server) Port() uint {
+	return s.port
 }

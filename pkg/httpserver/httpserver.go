@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -32,7 +31,7 @@ func NewServer(config *Config) *Server {
 }
 
 // Start ...
-func (s *Server) Start() {
+func (s *Server) Start() error {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", s.indexHandler)
@@ -52,8 +51,7 @@ func (s *Server) Start() {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	fmt.Printf("HTTP/WebSocket port: %d\n", s.port)
-	log.Fatal(srv.ListenAndServe())
+	return srv.ListenAndServe()
 }
 
 func (s *Server) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,4 +82,9 @@ func (s *Server) channelRedirectHandler(w http.ResponseWriter, r *http.Request) 
 	id := vars["channelId"]
 	_ = id
 	http.Redirect(w, r, "/s"+r.URL.String(), http.StatusTemporaryRedirect)
+}
+
+// Port ...
+func (s *Server) Port() uint {
+	return s.port
 }

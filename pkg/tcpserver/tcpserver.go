@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
 	"github.com/streamhut/streamhut/common/byteutil"
 	"github.com/streamhut/streamhut/common/stringutil"
@@ -174,7 +173,7 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 				}
 
 				if cl.Wsconn != nil {
-					if err = cl.Wsconn.WriteMessage(websocket.BinaryMessage, bufferWithMime); err != nil {
+					if err = cl.Write(bufferWithMime); err != nil {
 						log.Fatal(err)
 					}
 				}

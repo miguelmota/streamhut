@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -27,6 +28,7 @@ type Conn struct {
 	Channel string
 	Wsconn  *websocket.Conn
 	Netconn net.Conn
+	mu      sync.Mutex
 }
 
 // Config ...
@@ -103,6 +105,13 @@ func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Write ...
+func (conn *Conn) Write(msg []byte) error {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	return conn.Wsconn.WriteMessage(websocket.BinaryMessage, msg)
+}
+
 func (w *WS) handleDisconnect(conn *Conn, channel string) {
 	fmt.Printf("close %s", conn.ID)
 
@@ -122,7 +131,7 @@ func (w *WS) handleDisconnect(conn *Conn, channel string) {
 	w.Socks[channel] = clients
 
 	if err := w.sendConnections(clients); err != nil {
-		log.Fatal(err)
+		fmt.Println("error:", err)
 	}
 }
 
@@ -181,7 +190,7 @@ func (w *WS) sendConnections(clients []*Conn) error {
 			return err
 		}
 
-		if err := client.Wsconn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
+		if err := client.Write(msg); err != nil {
 			return err
 		}
 
@@ -220,7 +229,7 @@ func (w *WS) sendConnections(clients []*Conn) error {
 				}
 
 				bufferWithMime := byteutil.BufferWithMime(vLog.Data, mime)
-				if err = client.Wsconn.WriteMessage(websocket.BinaryMessage, bufferWithMime); err != nil {
+				if err = client.Write(bufferWithMime); err != nil {
 					log.Fatal(err)
 				}
 			}
@@ -230,7 +239,7 @@ func (w *WS) sendConnections(clients []*Conn) error {
 			messages := w.db.ReadStreamMessages(client.Channel)
 			for _, vLog := range messages {
 				bufferWithMime := byteutil.BufferWithMime(vLog.Message, vLog.Mime)
-				if err = client.Wsconn.WriteMessage(websocket.BinaryMessage, bufferWithMime); err != nil {
+				if err = client.Write(bufferWithMime); err != nil {
 					log.Fatal(err)
 				}
 			}

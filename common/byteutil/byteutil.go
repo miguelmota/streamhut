@@ -1,5 +1,7 @@
 package byteutil
 
+import "bytes"
+
 var arrSize = 100
 
 // BufferWithMime ...
@@ -15,5 +17,5 @@ func DecoupleBufferWithMime(buf []byte) ([]byte, string) {
 	mime := buf[:arrSize]
 	b := buf[arrSize:]
 
-	return b, string(mime)
+	return b, string(bytes.Trim(mime, "\x00"))
 }

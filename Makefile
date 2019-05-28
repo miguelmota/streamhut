@@ -7,6 +7,10 @@ build: release/dry
 start:
 	@go run cmd/streamhut/main.go server
 
+.PHONY: listen
+listen:
+	@go run cmd/streamhut/main.go listen --channel test
+
 .PHONY: release
 release:
 	goreleaser release --rm-dist

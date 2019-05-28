@@ -1,49 +1,87 @@
 package client
 
+import (
+	"fmt"
+	"net/url"
+	"os"
+
+	"github.com/gorilla/websocket"
+	"github.com/streamhut/streamhut/common/byteutil"
+)
+
+// Client ...
+type Client struct {
+	host     string
+	port     uint
+	insecure bool
+}
+
+// Config ...
+type Config struct {
+	Host     string
+	Port     uint
+	Insecure bool
+}
+
+// NewClient ...
+func NewClient(config *Config) *Client {
+	return &Client{
+		host:     config.Host,
+		port:     config.Port,
+		insecure: config.Insecure,
+	}
+}
+
+// ListenConfig ...
+type ListenConfig struct {
+	Channel string
+}
+
+// Listen ...
+func (c *Client) Listen(config *ListenConfig) error {
+	u := constructWsURI(c.host, c.port, config.Channel, c.insecure)
+	fmt.Printf("streamhut: connecting to %s\n", u.String())
+	wsclient, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return err
+	}
+
+	defer wsclient.Close()
+	fmt.Printf("streamhut: listening on channel %q\n", config.Channel)
+
+	for {
+		_, message, err := wsclient.ReadMessage()
+		if err != nil {
+			return err
+		}
+		data, mime := byteutil.DecoupleBufferWithMime(message)
+		if mime == "shell" {
+			os.Stdout.Write(data)
+		}
+	}
+}
+
+func constructWsURI(host string, port uint, channel string, insecure bool) url.URL {
+	scheme := "wss"
+	if insecure {
+		scheme = "ws"
+	}
+
+	return url.URL{
+		Scheme: scheme,
+		Host:   fmt.Sprintf("%s:%d", host, port),
+		Path:   fmt.Sprintf("/ws/s/%s", channel),
+	}
+}
+
 /*
 // TODO port from node-streamhut
-
-program
-  .version(packageJson.version)
-  .option('-h, --host <host>', 'host name', null, null)
-  .option('-p, --port <port>', 'host port', null, null)
-  .option('-n, --not-secure', 'not using SSL', null, false)
-  .option('-c, --channel <id>', 'channel ID', null, null)
   .option('-t, --text <text>', 'text to send', null, null)
   .option('-f, --file <filepath>', 'file to send', null, null)
-  .usage(`<cmd> [options]
-
-  Commands:
 
     post [options]\tpost to a channel
     listen [options]\tlisten on a channel
-    server [options]\tstart a streamhut server`)
-  .arguments('<cmd>')
-  .action((cmd) => {
-    const {
-      host,
-      port,
-      notSecure,
-      channel,
-      text,
-      file
-    } = program
 
-    if (cmd === 'server') {
-      start({
-        port
-      })
-    } else if (cmd === 'listen') {
-      if (!host || !channel) {
-        return showHelp()
-      }
-
-      listen({
-        channel,
-        host,
-        port,
-        notSecure
-      })
     } else if (cmd === 'post') {
       if (!host || !channel) {
         return showHelp()
@@ -74,56 +112,8 @@ program
           }
         })
       }
-    } else {
-      showHelp()
     }
-  })
-  .parse(process.argv)
 
-if (!program.args.length) {
-  showHelp()
-  process.exit(0)
-}
-
-function showHelp () {
-  console.log(hut)
-  program.help()
-}
-
-function startServer (props) {
-  const port = props.port
-
-  server.start(port)
-}
-
-function listen (props) {
-  const url = constructWebsocketUrl(props)
-  const ws = new WebSocket(url)
-  ws.binaryType = 'arraybuffer'
-
-  ws.on('open', () => {
-    console.log(`connected to ${url}\n`)
-  })
-
-  ws.on('error', (error) => {
-    console.error(error)
-  })
-
-  ws.on('message', (data) => {
-    if (isArrayBuffer(data)) {
-      const {mime, arrayBuffer} = arrayBufferMimeDecouple(data)
-      const buffer = Buffer.from(arrayBuffer)
-
-      // TODO
-      // check mime type
-      var str = buffer.toString('utf8')
-      if (str) {
-        console.log(`received ${new Date()}:\n`)
-        console.log(str)
-      }
-    }
-  })
-}
 
 function post (props) {
   const {text, filepath, channel} = props
@@ -165,20 +155,6 @@ function post (props) {
       console.error(`no one is listening on channel: ${channel}`)
     }
   })
-}
-
-function constructWebsocketUrl (props) {
-  const {host, port, channel, notSecure} = props
-  const scheme = notSecure ? 'ws' : 'wss'
-
-  if (!host || !channel) {
-    program.outputHelp()
-    return false
-  }
-
-  const path = (channel || '').replace(/^\/?/, '/')
-
-  return `${scheme}://${host}${port ? `:${port}` : ''}${path}`
 }
 
 // https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers

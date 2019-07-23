@@ -12,6 +12,8 @@
 
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/miguelmota/streamhut/master/LICENSE) [![Build Status](https://travis-ci.org/miguelmota/streamhut.svg?branch=master)](https://travis-ci.org/miguelmota/streamhut) [![dependencies Status](https://david-dm.org/miguelmota/streamhut/status.svg)](https://david-dm.org/miguelmota/streamhut) [![NPM version](https://badge.fury.io/js/streamhut.svg)](http://badge.fury.io/js/streamhut)
 
+NOTE: This streamhut server written in node will be deprecated once the [golang rewrite](https://github.com/streamhut/streamhut/tree/golang_rewrite) is complete.
+
 ## Synopsis
 
 - Stream your terminal to anyone without installing anything.

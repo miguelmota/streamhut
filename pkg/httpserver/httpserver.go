@@ -14,13 +14,18 @@ import (
 	"github.com/streamhut/streamhut/pkg/wsserver"
 )
 
-var webZip = "https://github.com/streamhut/web/releases/download/v0.0.1/streamhut-web.tar.gz"
-var staticDirPath = "~/.streamhut/web"
+// DefaultWebTarURL is the default web build tarball url to download
+var DefaultWebTarURL = "https://github.com/streamhut/web/releases/download/v0.0.1/streamhut-web.tar.gz"
+
+// DefaultWebDir is the default web directory
+var DefaultWebDir = "~/.streamhut/web"
 
 // Config ...
 type Config struct {
-	Port uint
-	WS   *wsserver.WS
+	Port      uint
+	WS        *wsserver.WS
+	WebTarURL string
+	WebDir    string
 }
 
 // Server ...
@@ -28,14 +33,26 @@ type Server struct {
 	port          uint
 	ws            *wsserver.WS
 	staticDirPath string
+	webTarURL     string
 }
 
 // NewServer ...
 func NewServer(config *Config) *Server {
+	webTarURL := DefaultWebTarURL
+	if config.WebTarURL != "" {
+		webTarURL = config.WebTarURL
+	}
+
+	webDir := DefaultWebDir
+	if config.WebDir != "" {
+		webDir = config.WebDir
+	}
+
 	return &Server{
 		port:          config.Port,
 		ws:            config.WS,
-		staticDirPath: util.NormalizePath(staticDirPath),
+		webTarURL:     webTarURL,
+		staticDirPath: util.NormalizePath(webDir),
 	}
 }
 
@@ -115,7 +132,7 @@ func (s *Server) downloadWebBuildIfNotExists() error {
 	tempFilePath := tempFile.Name()
 	defer os.Remove(tempFilePath)
 
-	if err := util.DownloadFile(webZip, tempFilePath); err != nil {
+	if err := util.DownloadFile(s.webTarURL, tempFilePath); err != nil {
 		return err
 	}
 

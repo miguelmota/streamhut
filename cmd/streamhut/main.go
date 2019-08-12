@@ -11,7 +11,7 @@ import (
 	lol "github.com/kris-nova/lolgopher"
 	log "github.com/sirupsen/logrus"
 	cobra "github.com/spf13/cobra"
-	"github.com/streamhut/streamhut/cmd/streamhut/asciiart"
+	"github.com/streamhut/streamhut/pkg/asciiart"
 	"github.com/streamhut/streamhut/pkg/client"
 	"github.com/streamhut/streamhut/pkg/db"
 	"github.com/streamhut/streamhut/pkg/db/sqlite3db"
@@ -53,6 +53,8 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	var dbPath string
 	var dbType string
 	var shareBaseURL string
+	var webTarURL string
+	var webDir string
 
 	serverCmd := &cobra.Command{
 		Use:   "server",
@@ -93,8 +95,10 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 			}()
 
 			server := httpserver.NewServer(&httpserver.Config{
-				Port: httpPort,
-				WS:   ws,
+				Port:      httpPort,
+				WS:        ws,
+				WebTarURL: webTarURL,
+				WebDir:    webDir,
 			})
 
 			handleExit(func() {
@@ -116,6 +120,8 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	serverCmd.Flags().StringVarP(&dbPath, "db-path", "", "./data/sqlite3.db", "Sqlite3 database path")
 	serverCmd.Flags().StringVarP(&dbType, "db-type", "", "sqlite3", "Database type: Options are \"sqlite\"")
 	serverCmd.Flags().StringVarP(&shareBaseURL, "share-base-url", "", "", "Share base URL. Example: \"https://stream.ht/\"")
+	serverCmd.Flags().StringVarP(&webTarURL, "web-tar-url", "", httpserver.DefaultWebTarURL, "Web app tarball url to download")
+	serverCmd.Flags().StringVarP(&webDir, "web-dir", "", httpserver.DefaultWebDir, "Web app directory")
 
 	var host string
 	var port uint

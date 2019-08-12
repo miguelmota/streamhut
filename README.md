@@ -20,6 +20,10 @@
 - Anyone in the same channel can view what's streamed.
 - Easily self-host your own streamhut server.
 
+Streamhut allows you to stream (pipe) realtime data from your terminal stdout/stderr to a web xterm UI or even to another terminal.
+
+As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes pre-installed in most *nix systems than you can use streamhut! If you can't install netcat, you may also use the streamhut CLI client.
+
 **Disclaimer: This software is alpha quality and not production ready. Use at your own risk.**
 
 ## Demo
@@ -29,130 +33,15 @@
 ## Install
 
 ```bash
-$ npm install -g streamhut
+$ go get github.com/streamhut/streamhut
 ```
 
-### CLI
+## Getting Started
+
+One liner to stream your terminal:
 
 ```bash
-$ streamhut --help
-                           (   )
-                          (    )
-                           (    )
-                          (    )
-                            )  )
-                           (  (                  /\
-                            (_)                 /  \  /\
-                    ________[_]________      /\/    \/  \
-           /\      /\        ______    \    /   /\/\  /\/\
-          /  \    //_\       \    /\    \  /\/\/    \/    \
-   /\    / /\/\  //___\       \__/  \    \/
-  /  \  /\/    \//_____\       \ |[]|     \
- /\/\/\/       //_______\       \|__|      \
-/      \      /XXXXXXXXXX\                  \
-        \    /_I_II  I__I_\__________________\
-               I_I|  I__I_____[]_|_[]_____I
-               I_II  I__I_____[]_|_[]_____I
-               I II__I  I     XXXXXXX     I
-            ~~~~~"   "~~~~~~~~~~~~~~~~~~~~~~~~
-                                    _
-        _                          | |            _
-  ___ _| |_  ____ _____ _____ ____ | |__  _   _ _| |_
- /___|_   _)/ ___) ___ (____ |    \|  _ \| | | (_   _)
-|___ | | |_| |   | ____/ ___ | | | | | | | |_| | | |_
-(___/   \__)_|   |_____)_____|_|_|_|_| |_|____/   \__)
-
-
-
-  Usage: streamhut <cmd> [options]
-
-  Commands:
-
-    post [options]      post to a channel
-    listen [options]    listen on a channel
-    server [options]    start a streamhut server
-
-  Options:
-
-    -h, --help             output usage information
-    -V, --version          output the version number
-    -h, --host <host>      host name
-    -p, --port <port>      host port
-    -n, --not-secure       not using SSL
-    -c, --channel <id>     channel ID
-    -t, --text <text>      text to send
-
-```
-
-## Usage
-
-**Listening on a channel:**
-
-```bash
-$ streamhut listen -h streamhut.io -c yo
-connected to wss://streamhut.io/yo
-
-received Fri Jun 30 2017 14:40:14 GMT-0700 (PDT):
-
-hello
-
-```
-
-**Posting text data to a channel:**
-
-```bash
-$ streamhut post -h streamhut.io -c yo -t "hello"
-posting data to wss://streamhut.io/yo:
-
-hello
-```
-
-**Posting file data to a channel:**
-
-```bash
-$ streamhut post -h streamhut.io -c yo -f hello.txt
-posting data to wss://streamhut.io/yo:
-
-hello.txt
-```
-
-**Posting text data from stdin to a channel:**
-
-```bash
-$ cat hello.txt | streamhut post -h streamhut.io -c yo
-posting data to wss://streamhut.io/yo:
-
-hello
-```
-
-**Pipe realtime stdout to streamhut xterm using [`netcat`](https://en.wikipedia.org/wiki/Netcat):**
-
-```bash
-$ while true; do date; sleep 1; done | nc streamhut.io 1337
-Streaming to: https://streamhut.io/dsa
-```
-
-Don't have netcat installed? No problem! Pipe to a file descriptor with an open TCP connection:
-
-```bash
-$ exec 3<>/dev/tcp/streamhut.io/1337 && head -1 <&3 && exec &> >(tee >(cat >&3))
-Streaming to: https://streamhut.io/qev
-```
-
-<img src="./screenshots/netcat.gif" width="500">
-
-Add a delay before piping contents to know the streamhut url ahead of time:
-
-```bash
-$ (echo -n; sleep 5; cat hello.txt) | nc streamhut.io 1337
-Streaming to: https://streamhut.io/aoj
-# waits 5 seconds, and then send contents of file.
-```
-
-You can even stream the whole shell session in realtime:
-
-```bash
-$ exec > >(nc streamhut.io 1337) 2>&1
+$ exec > >(nc stream.ht 1337) 2>&1
 ```
 
 Example of streaming tail of file:
@@ -160,73 +49,123 @@ Example of streaming tail of file:
 ```bash
 # terminal 1
 $ cat >data.txt
+```
 
+```bash
 # terminal 2
 $ tail -F data.txt | nc streamhut.io 1337
+```
+
+Stream the current date every second:
+
+```bash
+$ while true; do date; sleep 1; done | nc stream.ht 1337
+```
+
+Stream output of a program (delay is required to see share url):
+
+```bash
+$ (sleep 5; htop) | nc stream.ht 1337
+# waits 5 seconds, and then send contents of program.
 ```
 
 Example of piping to both stdout and netcat:
 
 ```bash
-$ (echo -n; sleep 5; htop) | tee >(nc streamhut.io 1337)
+$ (echo -n; sleep 5; htop) | tee >(nc stream.ht 1337)
 ```
 
-### Starting a local server
-
-**Starting a streamhut server on localhost:**
+Don't have netcat available? Pipe to a file descriptor with an open TCP connection:
 
 ```bash
-$ streamhut server -p 1336
-HTTP/WebSocket port: 1336
-           TCP port: 1337
+$ exec 3<>/dev/tcp/stream.ht/1337 && head -1 <&3 && exec &> >(tee >(cat >&3))
 ```
 
-Then specify local hostname and port to connect:
+## CLI
 
 ```bash
-$ streamhut listen -h 127.0.0.1 -p 1336 -n -c yo
-connected to ws://127.0.0.1:1336/yo
+$ streamhut --help
+
+  Streamhut lets you stream and share your terminal.
+  For more info, visit: https://github.com/streamhut/streamhut
+
+  Usage:
+    streamhut [flags]
+    streamhut [command]
+
+  Available Commands:
+    help        Help about any command
+    listen      Listen on a channel
+    server      Start server
+
+  Flags:
+        --help   Show help
+
+  Use "streamhut [command] --help" for more information about a command.
+
 ```
 
-Post a message to the channel:
+### Usage
+
+#### Run your own server:
 
 ```bash
-$ echo 'hello' | streamhut post -h 127.0.0.1 -n -p 1336 -c yo
-posting data to ws://streamhut.io/yo:
+$ streamhut server
 
-hello
+Starting server...
+HTTP/WebSocket port: 8080
+TCP port: 1337
 ```
+
+Stream to your server:
+
+```bash
+$ exec > >(nc localhost 1337) 2>&1
+```
+
+For more options, run `streamhut server --help`
+
+#### Listening on a channel
+
+```bash
+# terminal 1
+$ streamhut listen -h localhost -p 8080 -i -c yo
+```
+
+```bash
+# terminal 2
+$ exec > >(nc localhost 1337) 2>&1;echo \#yo
+```
+
+For more options, run `streamhut listen --help`
 
 ## Docker
 
-You can run streamhut as a docker container:
+You can run streamhut as a Docker container:
 
 ```bash
-docker pull miguelmota/streamhut
-docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 -e HOST_URL='https://example.com' --restart unless-stopped miguelmota/streamhut:latest
-```
-
-## Development
-
-Start server
-
-```bash
-$ make server
-
-HTTP/WebSocket port: 3001
-           TCP port: 1337
-```
-
-Start web
-
-```bash
-$ make web
+$ docker pull streamhut/streamhut
+$ docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 --restart unless-stopped streamhut/streamhut:latest
 ```
 
 ## Test
 
 ```bash
-npm test
+make test
+```
+
+## Development
+
+Start server:
+
+```bash
+make start
+```
+
+Run migrations:
+
+```bash
+make migrate
 ```
 
 ## FAQ
@@ -235,9 +174,9 @@ npm test
 
   - A: Currently it's stored in a local sqlite3 database. More robust and scalable options are in the works.
 
-- Q: Are there plans to rewrite streamhut in other languages?
+- Q: What happened to the streamhut NPM module?
 
-  - A: Yes! A Golang implementation is in the works.
+  - A: The node.js implementation of streamhut is now deprecated in favor of this Golang implementation.
 
 - Q: Can the same channel be used more than once?
 
@@ -246,8 +185,12 @@ npm test
     Example:
 
     ```bash
-    exec > >(nc streamhut.io 1337) 2>&1;echo \#mychannel
+    exec > >(nc stream.ht 1337) 2>&1;echo \#mychannel
     ```
+
+- Q: What's the difference between stream.ht and streamhut.io?
+
+  - A: The domain stream.ht is an alias for streamhut.io, meaning you can type stream.ht as the domain for convenience. Other aliases are streamhut.net and streamhut.org
 
 ## License
 

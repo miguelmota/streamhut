@@ -10,7 +10,13 @@
 
 > Stream and send data, terminal to web and vice versa.
 
-[![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/miguelmota/streamhut/master/LICENSE) [![Build Status](https://travis-ci.org/miguelmota/streamhut.svg?branch=master)](https://travis-ci.org/miguelmota/streamhut) [![dependencies Status](https://david-dm.org/miguelmota/streamhut/status.svg)](https://david-dm.org/miguelmota/streamhut) [![NPM version](https://badge.fury.io/js/streamhut.svg)](http://badge.fury.io/js/streamhut)
+[![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/streamhut/streamhut/master/LICENSE)
+[![Build Status](https://travis-ci.org/streamhut/streamhut.svg?branch=master)](https://travis-ci.org/streamhut/streamhut)
+[![Go Report Card](https://goreportcard.com/badge/github.com/streamhut/streamhut?)](https://goreportcard.com/report/github.com/streamhut/streamhut)
+[![GoDoc](https://godoc.org/github.com/streamhut/streamhut?status.svg)](https://godoc.org/github.com/streamhut/streamhut)
+<!--
+[![Mentioned in Awesome Terminals](https://awesome.re/mentioned-badge.svg)](https://github.com/k4m4/terminals-are-sexy)
+-->
 
 ## Synopsis
 
@@ -24,7 +30,7 @@ Streamhut allows you to stream (pipe) realtime data from your terminal stdout/st
 
 As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes pre-installed in most *nix systems than you can use streamhut! If you can't install netcat, you may also use the streamhut CLI client.
 
-**Disclaimer: This software is alpha quality and not production ready. Use at your own risk.**
+**Disclaimer: This software is alpha quality and not production ready. Use at your own risk!**
 
 ## Demo
 
@@ -34,6 +40,14 @@ As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes
 
 ```bash
 $ go get github.com/streamhut/streamhut
+```
+
+## Self-host
+
+One-liner to self-host using Docker:
+
+```bash
+docker run -p 8080:8080 -p 1337:1337 streamhut/streamhut
 ```
 
 ## Getting Started
@@ -194,4 +208,4 @@ make migrate
 
 ## License
 
-[MIT](LICENSE)
+Released under the [Apache 2.0](./LICENSE) license.

@@ -12,7 +12,7 @@
 
 [![License](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/miguelmota/streamhut/master/LICENSE) [![Build Status](https://travis-ci.org/miguelmota/streamhut.svg?branch=master)](https://travis-ci.org/miguelmota/streamhut) [![dependencies Status](https://david-dm.org/miguelmota/streamhut/status.svg)](https://david-dm.org/miguelmota/streamhut) [![NPM version](https://badge.fury.io/js/streamhut.svg)](http://badge.fury.io/js/streamhut)
 
-NOTE: This streamhut server written in node will be deprecated once the [golang rewrite](https://github.com/streamhut/streamhut/tree/golang_rewrite) is complete.
+⚠️ NOTICE: This streamhut server written in node is now deprecated in favor of the [golang implementation](https://github.com/streamhut/streamhut).
 
 ## Synopsis
 
@@ -236,10 +236,6 @@ npm test
 - Q: How is the stream log data stored?
 
   - A: Currently it's stored in a local sqlite3 database. More robust and scalable options are in the works.
-
-- Q: Are there plans to rewrite streamhut in other languages?
-
-  - A: Yes! A Golang implementation is in the works.
 
 - Q: Can the same channel be used more than once?
 

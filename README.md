@@ -18,8 +18,6 @@
 [![Mentioned in Awesome Terminals](https://awesome.re/mentioned-badge.svg)](https://github.com/k4m4/terminals-are-sexy)
 -->
 
-NOTE: This streamhut server written in node will be deprecated once the [golang rewrite](https://github.com/streamhut/streamhut/tree/golang_rewrite) is complete.
-
 ## Synopsis
 
 - Stream your terminal to anyone without installing anything.
@@ -192,7 +190,7 @@ make migrate
 
 - Q: What happened to the streamhut NPM module?
 
-  - A: The node.js implementation of streamhut is now deprecated in favor of this Golang implementation.
+  - A: The [node.js implementation](https://github.com/streamhut/streamhut/tree/nodejs) of streamhut is now deprecated in favor of this Golang implementation.
 
 - Q: Can the same channel be used more than once?
 

@@ -192,11 +192,7 @@ func (s *Server) shareURL(client *wsserver.Conn) string {
 		host = "127.0.0.1"
 	}
 
-	hostURL := os.Getenv("HOST_URL")
-	if hostURL == "" {
-		hostURL = fmt.Sprintf("http://%s:%d", host, s.port)
-	}
-
+	hostURL := fmt.Sprintf("http://%s:%d", host, s.port)
 	u, err := url.Parse(hostURL)
 	if err != nil {
 		log.Fatal(err)

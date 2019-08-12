@@ -119,7 +119,7 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	serverCmd.Flags().UintVarP(&tcpPort, "tcp-port", "t", 1337, "TCP Port")
 	serverCmd.Flags().StringVarP(&dbPath, "db-path", "", "./data/sqlite3.db", "Sqlite3 database path")
 	serverCmd.Flags().StringVarP(&dbType, "db-type", "", "sqlite3", "Database type: Options are \"sqlite\"")
-	serverCmd.Flags().StringVarP(&shareBaseURL, "share-base-url", "", "", "Share base URL. Example: \"https://stream.ht/\"")
+	serverCmd.Flags().StringVarP(&shareBaseURL, "share-base-url", "", os.Getenv("HOST_URL"), "Share base URL. Example: \"https://stream.ht/\"")
 	serverCmd.Flags().StringVarP(&webTarURL, "web-tar-url", "", httpserver.DefaultWebTarURL, "Web app tarball url to download")
 	serverCmd.Flags().StringVarP(&webDir, "web-dir", "", httpserver.DefaultWebDir, "Web app directory")
 

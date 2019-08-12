@@ -26,10 +26,10 @@ push/docker:
 	docker push streamhut/streamhut:latest
 
 start/docker:
-	docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 -p 8765:8765 streamhut/streamhut:latest
+	docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 streamhut/streamhut:latest
 
 start/docker/prod:
-	docker run -e HOST_URL='https://stream.ht' -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 --restart unless-stopped streamhut/streamhut:latest
+	docker run -e NET_PORT=1337 -e PORT=8080 -e HOST_URL='https://stream.ht' -p 8080:8080 -p 1337:1337 --restart unless-stopped --detach streamhut/streamhut:latest
 
 migrate:
 	(cd migration && make migrate)

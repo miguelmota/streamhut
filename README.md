@@ -39,7 +39,7 @@ As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes
 ## Install
 
 ```bash
-$ go get github.com/streamhut/streamhut
+$ go get github.com/streamhut/streamhut/cmd/streamhut
 ```
 
 ## Self-host

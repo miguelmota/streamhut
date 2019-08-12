@@ -5,11 +5,11 @@ build: release/dry
 
 .PHONY: start
 start:
-	@go run cmd/streamhut/main.go server
+	go run cmd/streamhut/main.go server
 
 .PHONY: listen
 listen:
-	@go run cmd/streamhut/main.go listen --channel test
+	go run cmd/streamhut/main.go listen --channel test
 
 .PHONY: release
 release:

@@ -68,3 +68,9 @@ func NormalizePath(path string) string {
 
 	return path
 }
+
+// FilePath returns the path for the file
+func FilePath(path string) string {
+	parts := strings.Split(path, string(filepath.Separator))
+	return strings.Join(parts[:len(parts)-1], string(filepath.Separator))
+}

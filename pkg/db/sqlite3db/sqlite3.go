@@ -2,12 +2,19 @@ package sqlite3db
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/streamhut/streamhut/pkg/util"
 	"github.com/streamhut/streamhut/types"
 )
+
+// DefaultDBPath is the default path for the sqlite3 database
+var DefaultDBPath = "~/.streamhut/db/sqlite3.db"
 
 // Config ...
 type Config struct {
@@ -21,29 +28,57 @@ type DB struct {
 
 // NewDB ...
 func NewDB(config *Config) *DB {
-	db, err := sql.Open("sqlite3", config.DBPath+"?cache=shared&mode=rwc&_busy_timeout=5000")
+	dbPath := util.NormalizePath(config.DBPath)
+
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		dbDirPath := util.FilePath(dbPath)
+		if _, err := os.Stat(dbDirPath); os.IsNotExist(err) {
+			if err := os.MkdirAll(dbDirPath, 0700); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		f, err := os.Create(dbPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		f.Close()
+	}
+
+	db, err := sql.Open("sqlite3", fmt.Sprintf("%s?cache=shared&mode=rwc&_busy_timeout=5000", dbPath))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &DB{
-		db: db,
-	}
-}
 
-/*
-if (!fs.existsSync(dbPath)) {
-  const schemaPath = path.resolve(__dirname, '..', 'db/schema.sql')
-  db.serialize(function() {
-    const lines = fs.readFileSync(schemaPath, 'utf8').split('\n').filter(x => x)
-    for (var i = 0; i < lines.length; i++) {
-      if (lines[i].indexOf('sqlite_sequence') > -1) {
-        continue
-      }
-      db.run(lines[i]);
-    }
-  })
+	svc := &DB{db}
+	for _, line := range svc.schema() {
+		if len(line) < 3 {
+			continue
+		}
+
+		tx, err := db.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+		stmt, err := tx.Prepare(line)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := tx.Commit(); err != nil {
+			if err := tx.Rollback(); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	return svc
 }
-*/
 
 // Close ...
 func (d *DB) Close() error {
@@ -170,4 +205,22 @@ func (d *DB) InsertStreamMessage(msg *types.StreamMessage) {
 			log.Fatal(6, err)
 		}
 	}
+}
+
+func (d *DB) schema() []string {
+	schema := `
+		CREATE TABLE IF NOT EXISTS "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY);
+		CREATE TABLE IF NOT EXISTS "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime NOT NULL, "updated_at" datetime NOT NULL);
+		CREATE TABLE IF NOT EXISTS "stream_logs" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "stream_handle" blob NOT NULL, "data" blob NOT NULL, "created_at" datetime DEFAULT CURRENT_TIMESTAMP NOT NULL);
+		CREATE INDEX IF NOT EXISTS "index_stream_logs_on_stream_handle" ON "stream_logs" ("stream_handle");
+		CREATE INDEX IF NOT EXISTS "index_stream_logs_on_data" ON "stream_logs" ("data");
+		CREATE INDEX IF NOT EXISTS "index_stream_logs_on_created_at" ON "stream_logs" ("created_at");
+		CREATE TABLE IF NOT EXISTS "stream_messages" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "stream_handle" blob NOT NULL, "message" blob NOT NULL, "mime" blob NOT NULL, "created_at" datetime DEFAULT CURRENT_TIMESTAMP NOT NULL);
+		CREATE INDEX IF NOT EXISTS "index_stream_messages_on_stream_handle" ON "stream_messages" ("stream_handle");
+		CREATE INDEX IF NOT EXISTS "index_stream_messages_on_mime" ON "stream_messages" ("mime");
+		CREATE INDEX IF NOT EXISTS "index_stream_messages_on_data" ON "stream_messages" ("data");
+		CREATE INDEX IF NOT EXISTS "index_stream_messages_on_created_at" ON "stream_messages" ("created_at");
+	`
+
+	return strings.Split(schema, "\n")
 }

@@ -137,7 +137,7 @@ func (s *Server) downloadWebBuildIfNotExists() error {
 	}
 
 	if _, err := os.Stat(s.staticDirPath); os.IsNotExist(err) {
-		if err := os.MkdirAll(s.staticDirPath, os.ModePerm); err != nil {
+		if err := os.MkdirAll(s.staticDirPath, 0700); err != nil {
 			return err
 		}
 	}

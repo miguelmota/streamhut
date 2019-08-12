@@ -39,3 +39,6 @@ rollback:
 
 migrate/new:
 	(cd migration && rake db:new_migration name=$(NAME))
+
+schema:
+	sqlite3 data/sqlite3.db .schema > schema.sql

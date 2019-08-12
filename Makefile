@@ -1,49 +1,41 @@
-all: build
+all:build
 
-build: build/docker
+.PHONY: build
+build: release/dry
 
-link:
-	@lerna link
+.PHONY: start
+start:
+	go run cmd/streamhut/main.go server
 
-bootstrap:
-	@lerna bootstrap
+.PHONY: listen
+listen:
+	go run cmd/streamhut/main.go listen --channel test
 
-test:
-	@npm run test
+.PHONY: release
+release:
+	goreleaser release --rm-dist
 
-cli:
-	@node packages/client/cli.js --help
-
-streamhut:
-	@node packages/streamhut --help
-
-server:
-	@(cd packages/server && HOST_URL='http://localhost:3001' PORT=3001 NET_PORT=1337 npm start)
-	#lerna run start --stream --scope "@streamhut/server"
-
-web:
-	@(cd packages/web && npm start)
-
-build/web:
-	@(cd packages/web && npm run build)
+.PHONY: release/dry
+release/dry:
+	goreleaser release --rm-dist --skip-publish
 
 build/docker:
-	@docker build -t miguelmota/streamhut .
+	docker build -t streamhut/streamhut .
 
 push/docker:
-	@docker push miguelmota/streamhut:latest
+	docker push streamhut/streamhut:latest
 
 start/docker:
-	@docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 -p 8765:8765 miguelmota/streamhut:latest
+	docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 -p 8765:8765 streamhut/streamhut:latest
 
 start/docker/prod:
-	@docker run -e HOST_URL='https://streamhut.io' -e NET_PORT=1337 -e PORT=8080 -p 8080:8080 -p 1337:1337 -p 8765:8765 --restart unless-stopped miguelmota/streamhut:latest
+	docker run -e HOST_URL='https://stream.ht' -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 --restart unless-stopped streamhut/streamhut:latest
 
 migrate:
-	@(cd packages/server/migration && make migrate)
+	(cd migration && make migrate)
 
 rollback:
-	@(cd packages/server/migration && make rollback)
+	(cd migration && make rollback)
 
 migrate/new:
-	@(cd packages/server/migration && rake db:new_migration name=$(NAME))
+	(cd migration && rake db:new_migration name=$(NAME))

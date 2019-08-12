@@ -1,4 +1,2 @@
-designAssets/
-screenshots/
-node_modules
-packages/web/src
+Dockerfile
+Makefile

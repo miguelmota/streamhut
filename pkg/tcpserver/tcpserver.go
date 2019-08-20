@@ -12,32 +12,55 @@ import (
 	"strings"
 	"time"
 
+	"github.com/patrickmn/go-cache"
+	gocache "github.com/patrickmn/go-cache"
 	uuid "github.com/satori/go.uuid"
 	"github.com/streamhut/streamhut/common/byteutil"
 	"github.com/streamhut/streamhut/common/stringutil"
-	"github.com/streamhut/streamhut/common/util"
+	common "github.com/streamhut/streamhut/common/util"
 	"github.com/streamhut/streamhut/pkg/db"
+	"github.com/streamhut/streamhut/pkg/util"
 	"github.com/streamhut/streamhut/pkg/wsserver"
 	"github.com/streamhut/streamhut/types"
 )
 
+// ErrInvalidQuotaLimit ...
+var ErrInvalidQuotaLimit = fmt.Sprintf("Invalid quota size")
+
+// ErrInvalidQuotaDuration ...
+var ErrInvalidQuotaDuration = fmt.Sprintf("Invalid quota duration")
+
+// DefaultBandwidthQuotaLimit ...
+var DefaultBandwidthQuotaLimit = 1000 * 1000 * 10 // 10mb
+
+// DefaultBandwidthQuotaDuration ...
+var DefaultBandwidthQuotaDuration = 1 * time.Minute
+
+// BandwidthQuotaLimit type
+type BandwidthQuotaLimit uint64
+
 // Server ...
 type Server struct {
-	host         string
-	listener     net.Listener
-	port         uint
-	ws           *wsserver.WS
-	db           db.DB
-	shareBaseURL string
+	host                   string
+	listener               net.Listener
+	port                   uint
+	ws                     *wsserver.WS
+	db                     db.DB
+	shareBaseURL           string
+	cache                  *gocache.Cache
+	bandwidthQuotaLimit    BandwidthQuotaLimit
+	bandwidthQuotaDuration time.Duration
 }
 
 // Config ...
 type Config struct {
-	Host         string
-	Port         uint
-	WS           *wsserver.WS
-	DB           db.DB
-	ShareBaseURL string
+	Host                   string
+	Port                   uint
+	WS                     *wsserver.WS
+	DB                     db.DB
+	ShareBaseURL           string
+	BandwidthQuotaLimit    uint64
+	BandwidthQuotaDuration time.Duration
 }
 
 // NewServer ...
@@ -49,12 +72,23 @@ func NewServer(config *Config) *Server {
 		}
 	}
 
+	if config.BandwidthQuotaLimit > 0 && config.BandwidthQuotaDuration == 0 {
+		log.Fatal(ErrInvalidQuotaDuration)
+	}
+
+	if config.BandwidthQuotaDuration > 0 && config.BandwidthQuotaLimit == 0 {
+		log.Fatal(ErrInvalidQuotaLimit)
+	}
+
 	return &Server{
-		host:         config.Host,
-		port:         config.Port,
-		ws:           config.WS,
-		db:           config.DB,
-		shareBaseURL: shareBaseURL,
+		host:                   config.Host,
+		port:                   config.Port,
+		ws:                     config.WS,
+		db:                     config.DB,
+		shareBaseURL:           shareBaseURL,
+		cache:                  cache.New(gocache.DefaultExpiration, gocache.DefaultExpiration),
+		bandwidthQuotaLimit:    BandwidthQuotaLimit(config.BandwidthQuotaLimit),
+		bandwidthQuotaDuration: config.BandwidthQuotaDuration,
 	}
 }
 
@@ -89,7 +123,7 @@ func (s *Server) randChannel() string {
 	for {
 		channel := stringutil.RandStringRunes(6)
 		_, ok := s.ws.Socks[channel]
-		if !ok && util.ValidChannelName(channel) {
+		if !ok && common.ValidChannelName(channel) {
 			return channel
 		}
 	}
@@ -103,10 +137,16 @@ func (s *Server) channelTaken(channel string) bool {
 func (s *Server) handleRequest(client *wsserver.Conn) {
 	reader := bufio.NewReader(client.Netconn)
 	index := 0
-	expired := false
+	channelReadExpired := false
 
+	var ip string
+	if addr, ok := client.Netconn.RemoteAddr().(*net.TCPAddr); ok {
+		ip = addr.IP.String()
+	}
+
+	// NOTE: a timeout to allow reading of channel first
 	time.AfterFunc(5*time.Millisecond, func() {
-		expired = true
+		channelReadExpired = true
 		if client.Channel == "" {
 			client.Channel = s.randChannel()
 		}
@@ -117,9 +157,42 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 
 	for {
 		line := make([]byte, 1024)
-		_, err := reader.Read(line)
+		n, err := reader.Read(line)
 		switch err {
 		case nil:
+			if s.bandwidthQuotaLimit > 0 {
+				_, exp, found := s.cache.GetWithExpiration(ip)
+				if found {
+					expiresIn := time.Duration(exp.Unix()-time.Now().Unix()) * time.Second
+
+					if expiresIn.Seconds() == 0 {
+						client.ResetBandwidthQuota()
+						s.cache.Delete(ip)
+					} else {
+						msg := fmt.Sprintf("streamhut: bandwidth quota reached. Try again in %vs", expiresIn.Seconds())
+						log.Printf("quota reached for ip %v; can retry in %vs\n", ip, expiresIn.Seconds())
+						client.Netconn.Write([]byte(msg))
+
+						// NOTE: timeout must be less than channelReadExpired
+						time.Sleep(4 * time.Millisecond)
+						client.Netconn.Close()
+						return
+					}
+				}
+
+				client.TollBandwidth(uint64(n))
+				if client.BandwidthQuotaUsed() > s.bandwidthQuotaLimit.Uint64() {
+					expiresIn := time.Duration(int(s.bandwidthQuotaDuration.Seconds())-time.Now().Second()) * time.Second
+					s.cache.Set(ip, time.Now(), expiresIn)
+					msg := fmt.Sprintf("\nstreamhut: bandwidth quota reached. Try again in %vs", expiresIn.Seconds())
+					log.Printf("quota reached for ip %v; can retry in %vs\n", ip, expiresIn.Seconds())
+					client.Netconn.Write([]byte(msg))
+					time.Sleep(1 * time.Second)
+					client.Netconn.Close()
+					return
+				}
+			}
+
 			// echo back to client
 			client.Netconn.Write(line)
 		case io.EOF:
@@ -128,13 +201,13 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 			os.Exit(0)
 		}
 
-		if index == 0 && !expired {
+		if index == 0 && !channelReadExpired {
 			if len(line) > 0 && line[0] == '#' {
 				re := regexp.MustCompile(`#([a-zA-Z0-9]+)\n?\r?`)
 				matches := re.FindAllStringSubmatch(string(line), -1)
 				if len(matches) > 0 && len(matches[0]) > 1 {
-					client.Channel = util.NormalizeChannelName(matches[0][1])
-					if !util.ValidChannelName(client.Channel) {
+					client.Channel = common.NormalizeChannelName(matches[0][1])
+					if !common.ValidChannelName(client.Channel) {
 						msg := fmt.Sprintf("streamhut: channel name %q is not available", client.Channel)
 						client.Netconn.Write([]byte(msg))
 						if err := client.Netconn.Close(); err != nil {
@@ -212,4 +285,29 @@ func (s *Server) shareURL(client *wsserver.Conn) string {
 // Port ...
 func (s *Server) Port() uint {
 	return s.port
+}
+
+// BandwidthQuotaLimit ...
+func (s *Server) BandwidthQuotaLimit() BandwidthQuotaLimit {
+	return s.bandwidthQuotaLimit
+}
+
+// BandwidthQuotaDuration ...
+func (s *Server) BandwidthQuotaDuration() time.Duration {
+	return s.bandwidthQuotaDuration
+}
+
+// BandwidthQuotaEnabled ...
+func (s *Server) BandwidthQuotaEnabled() bool {
+	return s.bandwidthQuotaLimit > 0
+}
+
+// Uint64 ...
+func (b BandwidthQuotaLimit) Uint64() uint64 {
+	return uint64(b)
+}
+
+// String ...
+func (b BandwidthQuotaLimit) String() string {
+	return util.Uint64ToStorageSizeString(uint64(b))
 }

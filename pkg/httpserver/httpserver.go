@@ -97,7 +97,6 @@ func (s *Server) channelHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["channelId"]
 	_ = id
-	fmt.Println("W")
 	if strings.Contains(r.URL.String(), ".websocket") {
 		w.Write([]byte(""))
 		return

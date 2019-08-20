@@ -51,7 +51,10 @@ func NewDB(config *Config) *DB {
 		log.Fatal(err)
 	}
 
-	svc := &DB{db}
+	svc := &DB{
+		db: db,
+	}
+
 	for _, line := range svc.schema() {
 		if len(line) < 3 {
 			continue
@@ -153,8 +156,8 @@ var insertMu sync.Mutex
 
 // InsertStreamLog ...
 func (d *DB) InsertStreamLog(vLog *types.StreamLog) {
-	//insertMu.Lock()
-	//defer insertMu.Unlock()
+	insertMu.Lock()
+	defer insertMu.Unlock()
 	tx, err := d.db.Begin()
 	if err != nil {
 		log.Fatal(3, err)
@@ -181,8 +184,8 @@ func (d *DB) InsertStreamLog(vLog *types.StreamLog) {
 
 // InsertStreamMessage ...
 func (d *DB) InsertStreamMessage(msg *types.StreamMessage) {
-	//insertMu.Lock()
-	//defer insertMu.Unlock()
+	insertMu.Lock()
+	defer insertMu.Unlock()
 	tx, err := d.db.Begin()
 	if err != nil {
 		log.Fatal(3, err)

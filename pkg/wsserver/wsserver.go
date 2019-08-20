@@ -24,11 +24,12 @@ var upgrader = websocket.Upgrader{
 
 // Conn ...
 type Conn struct {
-	ID      string
-	Channel string
-	Wsconn  *websocket.Conn
-	Netconn net.Conn
-	mu      sync.Mutex
+	ID             string
+	Channel        string
+	Wsconn         *websocket.Conn
+	Netconn        net.Conn
+	BandwidthQuota uint64
+	mu             sync.Mutex
 }
 
 // Config ...
@@ -110,6 +111,21 @@ func (conn *Conn) Write(msg []byte) error {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	return conn.Wsconn.WriteMessage(websocket.BinaryMessage, msg)
+}
+
+// TollBandwidth ...
+func (conn *Conn) TollBandwidth(n uint64) {
+	conn.BandwidthQuota = conn.BandwidthQuota + n
+}
+
+// ResetBandwidthQuota ...
+func (conn *Conn) ResetBandwidthQuota() {
+	conn.BandwidthQuota = 0
+}
+
+// BandwidthQuotaUsed ...
+func (conn *Conn) BandwidthQuotaUsed() uint64 {
+	return conn.BandwidthQuota
 }
 
 func (w *WS) handleDisconnect(conn *Conn, channel string) {

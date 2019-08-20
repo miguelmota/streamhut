@@ -17,6 +17,7 @@ import (
 	"github.com/streamhut/streamhut/pkg/db/sqlite3db"
 	"github.com/streamhut/streamhut/pkg/httpserver"
 	"github.com/streamhut/streamhut/pkg/tcpserver"
+	"github.com/streamhut/streamhut/pkg/util"
 	"github.com/streamhut/streamhut/pkg/wsserver"
 )
 
@@ -26,7 +27,8 @@ var ErrDBTypeUnsupported = errors.New("Database type is unsupported")
 // ErrChannelRequired ...
 var ErrChannelRequired = errors.New("Channel is required")
 
-var yellow = color.New(color.FgYellow).SprintFunc()
+var yellow = color.New(color.FgYellow)
+var yellowSprintf = color.New(color.FgYellow).SprintFunc()
 var green = color.New(color.FgGreen)
 
 func main() {
@@ -55,6 +57,8 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	var shareBaseURL string
 	var webTarURL string
 	var webDir string
+	var humanBandwidthQuotaLimit string
+	var humanBandwidthQuotaDuration string
 
 	serverCmd := &cobra.Command{
 		Use:   "server",
@@ -83,11 +87,16 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 				shareBaseURL = fmt.Sprintf("http://127.0.0.1:%d/", httpPort)
 			}
 
+			bandwidthQuotaLimit := util.StorageSizeToUint64(humanBandwidthQuotaLimit)
+			bandwidthQuotaDuration := util.DurationStringToType(humanBandwidthQuotaDuration)
+
 			tcpServer := tcpserver.NewServer(&tcpserver.Config{
-				WS:           ws,
-				Port:         tcpPort,
-				DB:           db,
-				ShareBaseURL: shareBaseURL,
+				WS:                     ws,
+				Port:                   tcpPort,
+				DB:                     db,
+				ShareBaseURL:           shareBaseURL,
+				BandwidthQuotaLimit:    bandwidthQuotaLimit,
+				BandwidthQuotaDuration: bandwidthQuotaDuration,
 			})
 
 			go func() {
@@ -111,6 +120,11 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 			green.Printf("HTTP/WebSocket port: %d\n", server.Port())
 			green.Printf("TCP port: %d\n", tcpServer.Port())
 
+			if tcpServer.BandwidthQuotaEnabled() {
+				yellow.Printf("Bandwidth quota limit: %s\n", tcpServer.BandwidthQuotaLimit().String())
+				yellow.Printf("Bandwidth quota duration: %s\n", tcpServer.BandwidthQuotaDuration().String())
+			}
+
 			return server.Start()
 		},
 	}
@@ -122,6 +136,8 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	serverCmd.Flags().StringVarP(&shareBaseURL, "share-base-url", "", os.Getenv("HOST_URL"), "Share base URL. Example: \"https://stream.ht/\"")
 	serverCmd.Flags().StringVarP(&webTarURL, "web-tar-url", "", httpserver.DefaultWebTarURL, "Web app tarball url to download")
 	serverCmd.Flags().StringVarP(&webDir, "web-dir", "", httpserver.DefaultWebDir, "Web app directory")
+	serverCmd.Flags().StringVarP(&humanBandwidthQuotaLimit, "bandwidth-quota-limit", "", os.Getenv("BANDWIDTH_QUOTA_LIMIT"), "bandwidth quota limit (eg. 100kb, 1mb, 1gb, etc)")
+	serverCmd.Flags().StringVarP(&humanBandwidthQuotaDuration, "bandwidth-quota-duration", "", os.Getenv("BANDWIDTH_QUOTA_DURATION"), "bandwidth quota duration (eg. 45s, 10m, 1h, 1d, 1w, etc)")
 
 	var host string
 	var port uint
@@ -170,7 +186,7 @@ func handleExit(cb func()) {
 	signal.Notify(gracefulStop, syscall.SIGINT)
 	go func() {
 		sig := <-gracefulStop
-		fmt.Printf("Caught signal: %+v\n%s", sig, yellow("Shutting down..."))
+		fmt.Printf("Caught signal: %+v\n%s", sig, yellowSprintf("Shutting down..."))
 		cb()
 		os.Exit(0)
 	}()

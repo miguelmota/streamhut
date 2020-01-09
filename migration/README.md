@@ -1,4 +1,4 @@
-# ethindexer migrations
+# streamhut migrations
 
 ## Getting started
 
@@ -14,7 +14,7 @@ Set your database environment variables:
 ```bash
 POSTGRES_HOST=127.0.0.1
 POSTGRES_PORT=5432
-POSTGRES_DBNAME=ethdb
+POSTGRES_DBNAME=streamhut
 POSTGRES_USER=root
 POSTGRES_PASS=
 ```

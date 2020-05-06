@@ -159,7 +159,7 @@ You can run streamhut as a Docker container:
 
 ```bash
 $ docker pull streamhut/streamhut
-$ docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 --restart unless-stopped streamhut/streamhut:latest
+$ docker run -e PORT=8080 -e TCP_PORT=1337 -p 8080:8080 -p 1337:1337 --restart unless-stopped streamhut/streamhut:latest
 ```
 
 ## Test

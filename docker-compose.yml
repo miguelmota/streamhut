@@ -1,0 +1,14 @@
+version: '3.7'
+
+services:
+  streamhut:
+    build: .
+    container_name: streamhut
+    ports:
+      - "8080:8080"
+      - "1337:1337"
+    environment:
+      - PORT=8080
+      - TCP_PORT=1337
+      - SHARE_BASE_URL=https://archlinux.local
+    command: ["./streamhut", "server"]

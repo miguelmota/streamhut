@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	color "github.com/fatih/color"
@@ -129,11 +130,49 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 		},
 	}
 
-	serverCmd.Flags().UintVarP(&httpPort, "port", "p", 8080, "HTTP Port")
-	serverCmd.Flags().UintVarP(&tcpPort, "tcp-port", "t", 1337, "TCP Port")
+	defaultHTTPPort := uint(8080)
+
+	if os.Getenv("PORT") != "" {
+		i, err := strconv.ParseUint(os.Getenv("PORT"), 10, 32)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defaultHTTPPort = uint(i)
+	}
+
+	defaultTCPPort := uint(1337)
+
+	if os.Getenv("NET_PORT") != "" {
+		i, err := strconv.ParseUint(os.Getenv("NET_PORT"), 10, 32)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defaultTCPPort = uint(i)
+
+		log.Warn("Deprecation notice: NET_PORT is deprecated. Please use TCP_PORT instead.")
+	}
+
+	if os.Getenv("TCP_PORT") != "" {
+		i, err := strconv.ParseUint(os.Getenv("TCP_PORT"), 10, 32)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defaultTCPPort = uint(i)
+	}
+
+	defaultShareBaseURL := os.Getenv("HOST_URL")
+	if defaultShareBaseURL == "" {
+		defaultShareBaseURL = os.Getenv("SHARE_BASE_URL")
+	}
+
+	serverCmd.Flags().UintVarP(&httpPort, "port", "p", defaultHTTPPort, "HTTP Port")
+	serverCmd.Flags().UintVarP(&tcpPort, "tcp-port", "t", defaultTCPPort, "TCP Port")
 	serverCmd.Flags().StringVarP(&dbPath, "db-path", "", sqlite3db.DefaultDBPath, "Sqlite3 database path")
 	serverCmd.Flags().StringVarP(&dbType, "db-type", "", "sqlite3", "Database type: Options are \"sqlite\"")
-	serverCmd.Flags().StringVarP(&shareBaseURL, "share-base-url", "", os.Getenv("HOST_URL"), "Share base URL. Example: \"https://stream.ht/\"")
+	serverCmd.Flags().StringVarP(&shareBaseURL, "share-base-url", "", defaultShareBaseURL, "Share base URL. Example: \"https://stream.ht/\"")
 	serverCmd.Flags().StringVarP(&webTarURL, "web-tar-url", "", httpserver.DefaultWebTarURL, "Web app tarball url to download")
 	serverCmd.Flags().StringVarP(&webDir, "web-dir", "", httpserver.DefaultWebDir, "Web app directory")
 	serverCmd.Flags().StringVarP(&humanBandwidthQuotaLimit, "bandwidth-quota-limit", "", os.Getenv("BANDWIDTH_QUOTA_LIMIT"), "bandwidth quota limit (eg. 100kb, 1mb, 1gb, etc)")

@@ -1,7 +1,7 @@
 all:build
 
 .PHONY: build
-build: release/dry
+build: release-dry
 
 .PHONY: start
 start:
@@ -15,20 +15,20 @@ listen:
 release:
 	goreleaser release --rm-dist
 
-.PHONY: release/dry
-release/dry:
+.PHONY: release-dry
+release-dry:
 	goreleaser release --rm-dist --skip-publish
 
-build/docker:
+build-docker:
 	docker build -t streamhut/streamhut .
 
-push/docker:
+push-docker:
 	docker push streamhut/streamhut:latest
 
-start/docker:
+start-docker:
 	docker run -e PORT=8080 -e NET_PORT=1337 -p 8080:8080 -p 1337:1337 streamhut/streamhut:latest
 
-start/docker/prod:
+start-docker-prod:
 	docker run -e NET_PORT=1337 -e PORT=8080 -e HOST_URL='https://stream.ht' -p 8080:8080 -p 1337:1337 --restart unless-stopped --detach streamhut/streamhut:latest
 
 migrate:
@@ -37,7 +37,7 @@ migrate:
 rollback:
 	(cd migration && make rollback)
 
-migrate/new:
+migrate-new:
 	(cd migration && rake db:new_migration name=$(NAME))
 
 schema:

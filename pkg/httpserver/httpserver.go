@@ -15,7 +15,7 @@ import (
 )
 
 // DefaultWebTarURL is the default web build tarball url to download
-var DefaultWebTarURL = "https://github.com/streamhut/web/releases/download/v0.0.1/streamhut-web.tar.gz"
+var DefaultWebTarURL = "https://github.com/streamhut/web/releases/latest/download/streamhut-web.tar.gz"
 
 // DefaultWebDir is the default web directory
 var DefaultWebDir = "~/.streamhut/web"

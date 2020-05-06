@@ -30,11 +30,13 @@ Streamhut allows you to stream (pipe) realtime data from your terminal stdout/st
 
 As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes pre-installed in most *nix systems than you can use streamhut! If you can't install netcat, you may also use the streamhut CLI client.
 
-**Disclaimer: This software is alpha quality and not production ready. Use at your own risk!**
+#### ⚠️ Disclaimer: This software is alpha quality and not production ready. Use at your own risk!
 
 ## Demo
 
 **[https://streamhut.io](https://streamhut.io)**
+
+![Demo](https://s3.amazonaws.com/assets.streamhut.io/streamhut_demo_1.gif)
 
 ## Install
 

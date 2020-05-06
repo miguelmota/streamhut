@@ -25,6 +25,12 @@ build-docker:
 push-docker:
 	docker push streamhut/streamhut:latest
 
+start-docker:
+	docker run -e PORT=8080 -e TCP_PORT=1337 -p 8080:8080 -p 1337:1337 streamhut/streamhut:latest
+
+start-docker-prod:
+	docker run -e PORT=8080 -e TCP_PORT=1337 -e HOST_URL='https://stream.ht' -p 8080:8080 -p 1337:1337 --restart unless-stopped --detach streamhut/streamhut:latest
+
 .PHONY: docker-compose-up
 docker-compose-up:
 	docker-compose up
@@ -32,12 +38,6 @@ docker-compose-up:
 .PHONY: docker-compose-up-build
 docker-compose-up-build:
 	docker-compose up --build
-
-start-docker:
-	docker run -e PORT=8080 -e TCP_PORT=1337 -p 8080:8080 -p 1337:1337 streamhut/streamhut:latest
-
-start-docker-prod:
-	docker run -e PORT=8080 -e TCP_PORT=1337 -e HOST_URL='https://stream.ht' -p 8080:8080 -p 1337:1337 --restart unless-stopped --detach streamhut/streamhut:latest
 
 migrate:
 	(cd migration && make migrate)

@@ -9,7 +9,6 @@ git rm --cached <file>
 
 # Compiled source #
 ###################
-*.com
 *.class
 *.dll
 *.exe
@@ -103,6 +102,7 @@ _test
 _archive
 uploads
 tmp
+migration/vendor
 
 # Files to ignore #
 ###################

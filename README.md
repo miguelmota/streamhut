@@ -1,6 +1,6 @@
 <h3 align="center">
   <br />
-  <img src="https://user-images.githubusercontent.com/168240/39515825-119445f0-4db0-11e8-93ef-7f3f67abccb2.png" alt="logo" width="700" />
+  <img src="https://user-images.githubusercontent.com/168240/83982881-ecf66c00-a8de-11ea-969e-8b41887d681e.png" alt="logo" width="700" />
   <br />
   <br />
   <br />
@@ -69,7 +69,7 @@ $ cat >data.txt
 
 ```bash
 # terminal 2
-$ tail -F data.txt | nc streamhut.io 1337
+$ tail -F data.txt | nc stream.ht 1337
 ```
 
 Stream the current date every second:
@@ -204,9 +204,9 @@ make migrate
     exec > >(nc stream.ht 1337) 2>&1;echo \#mychannel
     ```
 
-- Q: What's the difference between stream.ht and streamhut.io?
+- Q: What's the difference between _stream.ht_ and _streamhut.io_?
 
-  - A: The domain stream.ht is an alias for streamhut.io, meaning you can type stream.ht as the domain for convenience. Other aliases are streamhut.net and streamhut.org
+  - A: The domain _stream.ht_ is an alias for _streamhut.io_, meaning you can type _stream.ht_ as the domain for convenience. Other aliases are _streamhut.net_ and _streamhut.org_.
 
 ## License
 

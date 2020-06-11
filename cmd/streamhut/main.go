@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	color "github.com/fatih/color"
 	lol "github.com/kris-nova/lolgopher"
@@ -37,19 +38,41 @@ func main() {
 		log.SetReportCaller(true)
 	}
 
+	defaultHTTPPort := uint(8080)
+	defaultTCPPort := uint(1337)
+	defaultDelay := 2
+	defaultTimeout := 5
+
 	var help bool
+	var connectPort uint
+	var connectHost string
+	var delay int
+	var timeout int
 
 	rootCmd := &cobra.Command{
 		Use:   "streamhut",
 		Short: "Streamhut",
 		Long: `Streamhut lets you stream and share your terminal.
 For more info, visit: https://github.com/streamhut/streamhut`,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sclient := client.NewClient(&client.Config{
+				Host:     connectHost,
+				Port:     connectPort,
+				Insecure: true,
+			})
+
+			return sclient.Stream(&client.StreamConfig{
+				Delay:   time.Duration(delay) * time.Second,
+				Timeout: time.Duration(timeout) * time.Second,
+			})
 		},
 	}
 
 	rootCmd.PersistentFlags().BoolVarP(&help, "help", "", false, "Show help")
+	rootCmd.Flags().UintVarP(&connectPort, "port", "p", defaultTCPPort, "Host port")
+	rootCmd.Flags().StringVarP(&connectHost, "host", "h", "127.0.0.1", "Host to connect to")
+	rootCmd.Flags().IntVarP(&delay, "delay", "d", defaultDelay, "Delay in seconds before starting stream")
+	rootCmd.Flags().IntVarP(&timeout, "timeout", "t", defaultTimeout, "Max timeout allowed before exiting if no data is recieved after starting")
 
 	var httpPort uint
 	var tcpPort uint
@@ -118,8 +141,8 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 			lolwriter := lol.NewTruecolorLolWriter()
 			lolwriter.Write([]byte(asciiart.Hut()))
 			fmt.Println("\nStarting server...")
-			green.Printf("HTTP/WebSocket port: %d\n", server.Port())
-			green.Printf("TCP port: %d\n", tcpServer.Port())
+			green.Printf("HTTP/WebSocket port (web): %d\n", server.Port())
+			green.Printf("TCP port (streaming): %d\n", tcpServer.Port())
 
 			if tcpServer.BandwidthQuotaEnabled() {
 				yellow.Printf("Bandwidth quota limit: %s\n", tcpServer.BandwidthQuotaLimit().String())
@@ -130,8 +153,6 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 		},
 	}
 
-	defaultHTTPPort := uint(8080)
-
 	if os.Getenv("PORT") != "" {
 		i, err := strconv.ParseUint(os.Getenv("PORT"), 10, 32)
 		if err != nil {
@@ -140,8 +161,6 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 
 		defaultHTTPPort = uint(i)
 	}
-
-	defaultTCPPort := uint(1337)
 
 	if os.Getenv("NET_PORT") != "" {
 		i, err := strconv.ParseUint(os.Getenv("NET_PORT"), 10, 32)

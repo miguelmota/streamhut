@@ -64,7 +64,7 @@ Example of streaming tail of file:
 
 ```bash
 # terminal 1
-$ cat >data.txt
+$ cat > data.txt
 ```
 
 ```bash

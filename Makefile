@@ -19,15 +19,19 @@ release:
 release-dry:
 	goreleaser release --rm-dist --skip-publish
 
+.PHONY: build-docker
 build-docker:
 	docker build -t streamhut/streamhut .
 
+.PHONY: push-docker
 push-docker:
 	docker push streamhut/streamhut:latest
 
+.PHONY: start-docker
 start-docker:
 	docker run -e PORT=8080 -e TCP_PORT=1337 -p 8080:8080 -p 1337:1337 streamhut/streamhut:latest
 
+.PHONY: start-docker-prod
 start-docker-prod:
 	docker run -e PORT=8080 -e TCP_PORT=1337 -e HOST_URL='https://stream.ht' -p 8080:8080 -p 1337:1337 --restart unless-stopped --detach streamhut/streamhut:latest
 
@@ -39,14 +43,26 @@ docker-compose-up:
 docker-compose-up-build:
 	docker-compose up --build
 
+.PHONY: migrate
 migrate:
 	(cd migration && make migrate)
 
-rollback:
-	(cd migration && make rollback)
-
+.PHONY: migrate-new
 migrate-new:
 	(cd migration && rake db:new_migration name=$(NAME))
 
+.PHONY: rollback
+rollback:
+	(cd migration && make rollback)
+
+.PHONY: schema
 schema:
 	sqlite3 data/sqlite3.db .schema > schema.sql
+
+.PHONY: server
+server:
+	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go server
+
+.PHONY: run
+run:
+	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go

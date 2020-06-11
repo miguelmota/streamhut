@@ -1,8 +1,11 @@
 package asciiart
 
+import "fmt"
+
 // Hut ...
+// source: https://asciiart.website/index.php?art=objects/buildings
 func Hut() string {
-	return `
+	return fmt.Sprintf("%s", `
                            (   )
                           (    )
                            (    )
@@ -28,5 +31,5 @@ func Hut() string {
  /___|_   _)/ ___) ___ (____ |    \|  _ \| | | (_   _)
 |___ | | |_| |   | ____/ ___ | | | | | | | |_| | | |_
 (___/   \__)_|   |_____)_____|_|_|_|_| |_|____/   \__)
-`
+`)
 }

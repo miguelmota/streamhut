@@ -65,4 +65,4 @@ server:
 
 .PHONY: run
 run:
-	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go
+	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go $(args)

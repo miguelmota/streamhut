@@ -8,10 +8,13 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/streamhut/streamhut/common/byteutil"
+	"github.com/streamhut/streamhut/common/open"
 )
 
 // Client ...
@@ -46,6 +49,7 @@ type ListenConfig struct {
 type StreamConfig struct {
 	Delay   time.Duration
 	Timeout time.Duration
+	Open    bool
 }
 
 // Listen ...
@@ -77,6 +81,14 @@ func (c *Client) Stream(config *StreamConfig) error {
 	url := fmt.Sprintf("%s:%v", c.host, c.port)
 	fmt.Printf("streamhut: connecting to %s\n", url)
 
+	timeout := config.Timeout
+	delay := config.Delay
+	openURL := config.Open
+
+	if delay >= timeout {
+		timeout = delay + (5 * time.Second)
+	}
+
 	conn, err := net.Dial("tcp", url)
 	if err != nil {
 		return err
@@ -89,13 +101,14 @@ func (c *Client) Stream(config *StreamConfig) error {
 
 	receivedData := false
 	errChan := make(chan error)
-	time.AfterFunc(config.Timeout, func() {
+	time.AfterFunc(timeout, func() {
 		if !receivedData {
 			errChan <- errors.New("timedout")
 		}
 	})
 
 	go func() {
+		// send to streamhut server
 		for {
 			if !ready {
 				continue
@@ -114,17 +127,32 @@ func (c *Client) Stream(config *StreamConfig) error {
 	}()
 
 	go func() {
+		// handle responses from streamhut
 		for {
 			line := make([]byte, 1024)
 			_, err := reader.Read(line)
 			switch err {
 			case nil:
-				fmt.Print(string(line))
+				lineStr := string(line)
+				if strings.Contains(lineStr, "streaming to") {
+					regex := regexp.MustCompile(`(https?.*)`)
+					matches := regex.FindAllString(lineStr, -1)
+					if len(matches) > 0 {
+						url := matches[0]
+						if openURL {
+							open.URL(url)
+						}
+					}
+				}
+
+				fmt.Print(lineStr)
 				if !ready {
-					time.Sleep(config.Delay)
+					time.Sleep(delay)
 					fmt.Println()
 				}
-				ready = true
+				if !ready {
+					ready = true
+				}
 			case io.EOF:
 				fmt.Println("EOF")
 				errChan <- nil

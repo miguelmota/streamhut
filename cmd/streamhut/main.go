@@ -40,7 +40,7 @@ func main() {
 
 	defaultHTTPPort := uint(8080)
 	defaultTCPPort := uint(1337)
-	defaultDelay := 2
+	defaultDelay := 0
 	defaultTimeout := 5
 
 	var help bool
@@ -48,6 +48,7 @@ func main() {
 	var connectHost string
 	var delay int
 	var timeout int
+	var open bool
 
 	rootCmd := &cobra.Command{
 		Use:   "streamhut",
@@ -64,6 +65,7 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 			return sclient.Stream(&client.StreamConfig{
 				Delay:   time.Duration(delay) * time.Second,
 				Timeout: time.Duration(timeout) * time.Second,
+				Open:    open,
 			})
 		},
 	}
@@ -73,6 +75,7 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	rootCmd.Flags().StringVarP(&connectHost, "host", "h", "127.0.0.1", "Host to connect to")
 	rootCmd.Flags().IntVarP(&delay, "delay", "d", defaultDelay, "Delay in seconds before starting stream")
 	rootCmd.Flags().IntVarP(&timeout, "timeout", "t", defaultTimeout, "Max timeout allowed before exiting if no data is recieved after starting")
+	rootCmd.Flags().BoolVarP(&open, "open", "o", false, "Open the stream url in your browser")
 
 	var httpPort uint
 	var tcpPort uint

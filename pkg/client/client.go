@@ -10,6 +10,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -52,6 +53,9 @@ type StreamConfig struct {
 	Open    bool
 }
 
+// ErrConnectionRefused ...
+var ErrConnectionRefused = errors.New("ECONNREFUSED")
+
 // Listen ...
 func (c *Client) Listen(config *ListenConfig) error {
 	u := constructWsURI(c.host, c.port, config.Channel, c.insecure)
@@ -78,8 +82,22 @@ func (c *Client) Listen(config *ListenConfig) error {
 
 // Stream ...
 func (c *Client) Stream(config *StreamConfig) error {
-	url := fmt.Sprintf("%s:%v", c.host, c.port)
-	fmt.Printf("streamhut: connecting to %s\n", url)
+	serverURL := fmt.Sprintf("%s:%v", c.host, c.port)
+
+	conn, err := net.Dial("tcp", serverURL)
+	if err != nil {
+		if checkErr(err) != ErrConnectionRefused {
+			return err
+		}
+
+		// if no local server running, then use canonical server
+		conn, err = net.Dial("tcp", "stream.ht:1337")
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Printf("streamhut: connecting to %s\n", serverURL)
 
 	timeout := config.Timeout
 	delay := config.Delay
@@ -87,11 +105,6 @@ func (c *Client) Stream(config *StreamConfig) error {
 
 	if delay >= timeout {
 		timeout = delay + (5 * time.Second)
-	}
-
-	conn, err := net.Dial("tcp", url)
-	if err != nil {
-		return err
 	}
 
 	writer := bufio.NewWriter(conn)
@@ -138,9 +151,9 @@ func (c *Client) Stream(config *StreamConfig) error {
 					regex := regexp.MustCompile(`(https?.*)`)
 					matches := regex.FindAllString(lineStr, -1)
 					if len(matches) > 0 {
-						url := matches[0]
+						streamURL := matches[0]
 						if openURL {
-							open.URL(url)
+							open.URL(streamURL)
 						}
 					}
 				}
@@ -174,4 +187,20 @@ func constructWsURI(host string, port uint, channel string, insecure bool) url.U
 		Host:   fmt.Sprintf("%s:%d", host, port),
 		Path:   fmt.Sprintf("/ws/s/%s", channel),
 	}
+}
+
+func checkErr(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if oerr, ok := err.(*net.OpError); ok {
+		if scerr, ok := oerr.Err.(*os.SyscallError); ok {
+			if scerr.Err == syscall.ECONNREFUSED {
+				return ErrConnectionRefused
+			}
+		}
+	}
+
+	return err
 }

@@ -38,21 +38,7 @@ As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes
 
 ![Demo](https://s3.amazonaws.com/assets.streamhut.io/streamhut_demo_1.gif)
 
-## Install
-
-```bash
-$ go get github.com/streamhut/streamhut/cmd/streamhut
-```
-
-## Self-host
-
-One-liner to self-host using Docker:
-
-```bash
-docker run -p 8080:8080 -p 1337:1337 streamhut/streamhut
-```
-
-## Getting Started
+## Getting Started (without installing anything)
 
 One liner to stream your terminal:
 
@@ -97,31 +83,43 @@ Don't have netcat available? Pipe to a file descriptor with an open TCP connecti
 $ exec 3<>/dev/tcp/stream.ht/1337 && head -1 <&3 && exec &> >(tee >(cat >&3))
 ```
 
-## CLI
+## Install
 
 ```bash
-$ streamhut --help
-
-  Streamhut lets you stream and share your terminal.
-  For more info, visit: https://github.com/streamhut/streamhut
-
-  Usage:
-    streamhut [flags]
-    streamhut [command]
-
-  Available Commands:
-    help        Help about any command
-    listen      Listen on a channel
-    server      Start server
-
-  Flags:
-        --help   Show help
-
-  Use "streamhut [command] --help" for more information about a command.
-
+$ go get github.com/streamhut/streamhut/cmd/streamhut
 ```
 
-### Usage
+## CLI
+
+Example of using streamhut CLI:
+
+#### Stream to server
+
+Piping commands:
+
+```bash
+$ htop | streamhut
+```
+
+Add delay to see share url:
+
+```bash
+$ htop | streamhut -d 5
+```
+
+Open url in browser:
+
+```bash
+$ htop | streamhut -o
+```
+
+Stream to different server:
+
+```bash
+$ htop | streamhut -h localhost -p 1337
+```
+
+For more options, run `streamhut --help`
 
 #### Run your own server:
 
@@ -133,7 +131,7 @@ HTTP/WebSocket port: 8080
 TCP port: 1337
 ```
 
-Stream to your server:
+Stream to your server using netcat:
 
 ```bash
 $ exec > >(nc localhost 1337) 2>&1
@@ -162,6 +160,14 @@ You can run streamhut as a Docker container:
 ```bash
 $ docker pull streamhut/streamhut
 $ docker run -e PORT=8080 -e TCP_PORT=1337 -p 8080:8080 -p 1337:1337 --restart unless-stopped streamhut/streamhut:latest
+```
+
+## Self-host (docker one-liner)
+
+One-liner to self-host using Docker:
+
+```bash
+docker run -p 8080:8080 -p 1337:1337 streamhut/streamhut
 ```
 
 ## Test

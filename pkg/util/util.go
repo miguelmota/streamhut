@@ -1,8 +1,10 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -10,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -18,6 +21,12 @@ var ErrBadStatus = fmt.Errorf("Not OK")
 
 // ErrInvalidInput is error for when the input is invalid
 var ErrInvalidInput = fmt.Errorf("Invalid input")
+
+// ErrConnectionRefused ...
+var ErrConnectionRefused = errors.New("ECONNREFUSED")
+
+// ErrPermissionDenied ...
+var ErrPermissionDenied = errors.New("EACCES")
 
 // DownloadFile downloads file to a directory
 func DownloadFile(url, filepath string) error {
@@ -176,4 +185,24 @@ func DurationStringToType(duration string) time.Duration {
 	}
 
 	return time.Duration(0) * time.Second
+}
+
+// CheckErr ...
+func CheckErr(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if oerr, ok := err.(*net.OpError); ok {
+		if scerr, ok := oerr.Err.(*os.SyscallError); ok {
+			switch scerr.Err {
+			case syscall.ECONNREFUSED:
+				return ErrConnectionRefused
+			case syscall.EACCES:
+				return ErrPermissionDenied
+			}
+		}
+	}
+
+	return err
 }

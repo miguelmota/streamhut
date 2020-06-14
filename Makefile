@@ -3,8 +3,12 @@ all:build
 .PHONY: build
 build: release-dry
 
-.PHONY: start
-start:
+.PHONY: run
+run:
+	go run cmd/streamhut/main.go
+
+.PHONY: server
+server:
 	go run cmd/streamhut/main.go server
 
 .PHONY: listen
@@ -59,10 +63,18 @@ rollback:
 schema:
 	sqlite3 data/sqlite3.db .schema > schema.sql
 
-.PHONY: server
-server:
-	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go server
+.PHONY: fix-server
+fix-server:
+	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go server $(args)
 
-.PHONY: run
-run:
+.PHONY: fix-listen
+fix-listen:
+	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go listen $(args)
+
+.PHONY: fix-run
+fix-run:
 	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go run -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go $(args)
+
+.PHONY: fix-build
+fix-build:
+	CGO_CFLAGS="-g -O2 -Wno-return-local-addr" go build -gccgoflags "-L /lib64 -l pthread" cmd/streamhut/main.go

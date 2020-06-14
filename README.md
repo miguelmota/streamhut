@@ -119,6 +119,12 @@ Stream to different server:
 $ htop | streamhut -h localhost -p 1337
 ```
 
+Stream to custom channel:
+
+```bash
+$ htop | streamhut -c mychannel
+```
+
 For more options, run `streamhut --help`
 
 #### Run your own server:
@@ -131,10 +137,12 @@ HTTP/WebSocket port: 8080
 TCP port: 1337
 ```
 
-Stream to your server using netcat:
+Run server with TLS/SSL:
 
 ```bash
-$ exec > >(nc localhost 1337) 2>&1
+$ mkcert localhost
+
+$ sudo streamhut server --tls --tls-cert=localhost.pem --tls-key=localhost-key.pem -p 443
 ```
 
 For more options, run `streamhut server --help`

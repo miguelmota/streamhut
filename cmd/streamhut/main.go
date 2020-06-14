@@ -31,6 +31,7 @@ var ErrChannelRequired = errors.New("Channel is required")
 
 var yellow = color.New(color.FgYellow)
 var yellowSprintf = color.New(color.FgYellow).SprintFunc()
+var redSprintf = color.New(color.FgRed).SprintFunc()
 var green = color.New(color.FgGreen)
 
 func main() {
@@ -49,10 +50,13 @@ func main() {
 	var delay int
 	var timeout int
 	var open bool
+	var channel string
 
 	rootCmd := &cobra.Command{
-		Use:   "streamhut",
-		Short: "Streamhut",
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		Use:           "streamhut",
+		Short:         "Streamhut",
 		Long: `Streamhut lets you stream and share your terminal.
 For more info, visit: https://github.com/streamhut/streamhut`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -66,6 +70,7 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 				Delay:   time.Duration(delay) * time.Second,
 				Timeout: time.Duration(timeout) * time.Second,
 				Open:    open,
+				Channel: channel,
 			})
 		},
 	}
@@ -73,12 +78,16 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	rootCmd.PersistentFlags().BoolVarP(&help, "help", "", false, "Show help")
 	rootCmd.Flags().UintVarP(&connectPort, "port", "p", defaultTCPPort, "Host port")
 	rootCmd.Flags().StringVarP(&connectHost, "host", "h", "127.0.0.1", "Host to connect to")
+	rootCmd.Flags().StringVarP(&channel, "channel", "c", "", "Channel to stream to")
 	rootCmd.Flags().IntVarP(&delay, "delay", "d", defaultDelay, "Delay in seconds before starting stream")
 	rootCmd.Flags().IntVarP(&timeout, "timeout", "t", defaultTimeout, "Max timeout allowed before exiting if no data is recieved after starting")
 	rootCmd.Flags().BoolVarP(&open, "open", "o", false, "Open the stream url in your browser")
 
 	var httpPort uint
 	var tcpPort uint
+	var tls bool
+	var tlsCert string
+	var tlsKey string
 	var dbPath string
 	var dbType string
 	var shareBaseURL string
@@ -86,6 +95,7 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 	var webDir string
 	var humanBandwidthQuotaLimit string
 	var humanBandwidthQuotaDuration string
+	var randomChannelLength uint
 
 	serverCmd := &cobra.Command{
 		Use:   "server",
@@ -111,7 +121,16 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 			})
 
 			if shareBaseURL == "" {
-				shareBaseURL = fmt.Sprintf("http://127.0.0.1:%d/", httpPort)
+				protocol := "http"
+				if tls {
+					protocol = "https"
+				}
+
+				if httpPort == 443 || httpPort == 80 {
+					shareBaseURL = fmt.Sprintf("%s://localhost/", protocol)
+				} else {
+					shareBaseURL = fmt.Sprintf("%s://localhost:%d/", protocol, httpPort)
+				}
 			}
 
 			bandwidthQuotaLimit := util.StorageSizeToUint64(humanBandwidthQuotaLimit)
@@ -124,10 +143,15 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 				ShareBaseURL:           shareBaseURL,
 				BandwidthQuotaLimit:    bandwidthQuotaLimit,
 				BandwidthQuotaDuration: bandwidthQuotaDuration,
+				RandomChannelLength:    randomChannelLength,
 			})
 
+			errCh := make(chan error, 2)
 			go func() {
-				log.Fatal(tcpServer.Start())
+				err := tcpServer.Start()
+				if err != nil {
+					errCh <- err
+				}
 			}()
 
 			server := httpserver.NewServer(&httpserver.Config{
@@ -135,6 +159,9 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 				WS:        ws,
 				WebTarURL: webTarURL,
 				WebDir:    webDir,
+				TLS:       tls,
+				TLSCert:   tlsCert,
+				TLSKey:    tlsKey,
 			})
 
 			handleExit(func() {
@@ -152,7 +179,17 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 				yellow.Printf("Bandwidth quota duration: %s\n", tcpServer.BandwidthQuotaDuration().String())
 			}
 
-			return server.Start()
+			err := server.Start()
+			if err != nil {
+				errCh <- err
+			}
+
+			select {
+			case err := <-errCh:
+				return err
+			default:
+				return nil
+			}
 		},
 	}
 
@@ -192,25 +229,29 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 
 	serverCmd.Flags().UintVarP(&httpPort, "port", "p", defaultHTTPPort, "HTTP Port")
 	serverCmd.Flags().UintVarP(&tcpPort, "tcp-port", "t", defaultTCPPort, "TCP Port")
+	serverCmd.Flags().BoolVarP(&tls, "tls", "", false, "Enable TLS. Requires TLS cert and TLS key parameters.")
+	serverCmd.Flags().StringVarP(&tlsCert, "tls-cert", "", "", "TLS certificate file path")
+	serverCmd.Flags().StringVarP(&tlsKey, "tls-key", "", "", "TLS key file path")
 	serverCmd.Flags().StringVarP(&dbPath, "db-path", "", sqlite3db.DefaultDBPath, "Sqlite3 database path")
 	serverCmd.Flags().StringVarP(&dbType, "db-type", "", "sqlite3", "Database type: Options are \"sqlite\"")
 	serverCmd.Flags().StringVarP(&shareBaseURL, "share-base-url", "", defaultShareBaseURL, "Share base URL. Example: \"https://stream.ht/\"")
 	serverCmd.Flags().StringVarP(&webTarURL, "web-tar-url", "", httpserver.DefaultWebTarURL, "Web app tarball url to download")
 	serverCmd.Flags().StringVarP(&webDir, "web-dir", "", httpserver.DefaultWebDir, "Web app directory")
-	serverCmd.Flags().StringVarP(&humanBandwidthQuotaLimit, "bandwidth-quota-limit", "", os.Getenv("BANDWIDTH_QUOTA_LIMIT"), "bandwidth quota limit (eg. 100kb, 1mb, 1gb, etc)")
-	serverCmd.Flags().StringVarP(&humanBandwidthQuotaDuration, "bandwidth-quota-duration", "", os.Getenv("BANDWIDTH_QUOTA_DURATION"), "bandwidth quota duration (eg. 45s, 10m, 1h, 1d, 1w, etc)")
+	serverCmd.Flags().StringVarP(&humanBandwidthQuotaLimit, "bandwidth-quota-limit", "", os.Getenv("BANDWIDTH_QUOTA_LIMIT"), "Bandwidth quota limit (eg. 100kb, 1mb, 1gb, etc)")
+	serverCmd.Flags().StringVarP(&humanBandwidthQuotaDuration, "bandwidth-quota-duration", "", os.Getenv("BANDWIDTH_QUOTA_DURATION"), "Bandwidth quota duration (eg. 45s, 10m, 1h, 1d, 1w, etc)")
+	serverCmd.Flags().UintVarP(&randomChannelLength, "random-channel-length", "", 6, "Number of characters to use for random channel generation.")
 
 	var host string
 	var port uint
+	var listenChannel string
 	var insecure bool
-	var channel string
 
 	listenCmd := &cobra.Command{
 		Use:   "listen",
 		Short: "Listen on a channel",
 		Long:  "Listen on a channel and receive messages",
 		Args: func(cmd *cobra.Command, args []string) error {
-			if channel == "" {
+			if listenChannel == "" {
 				return ErrChannelRequired
 			}
 
@@ -229,14 +270,15 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 		},
 	}
 
-	listenCmd.Flags().StringVarP(&channel, "channel", "c", "", "Channel to listen on")
+	listenCmd.Flags().StringVarP(&listenChannel, "channel", "c", "", "Channel to listen on")
 	listenCmd.Flags().StringVarP(&host, "host", "h", "127.0.0.1", "Host to run listener on")
-	listenCmd.Flags().UintVarP(&port, "port", "p", 1337, "Host port listening on")
+	listenCmd.Flags().UintVarP(&port, "port", "p", 8080, "Host port listening on")
 	listenCmd.Flags().BoolVarP(&insecure, "insecure", "i", false, "Set if remote host is insecure (not using HTTPS)")
 
 	rootCmd.AddCommand(serverCmd, listenCmd)
 
 	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(redSprintf(err))
 		os.Exit(1)
 	}
 }

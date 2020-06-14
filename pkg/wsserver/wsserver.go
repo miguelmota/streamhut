@@ -3,7 +3,6 @@ package wsserver
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"regexp"
@@ -55,7 +54,8 @@ func NewWS(config *Config) *WS {
 func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 	re, err := regexp.Compile(".*/s/([a-z]+)/?.*")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error:", err)
+		return
 	}
 
 	matches := re.FindStringSubmatch(r.URL.String())
@@ -69,7 +69,8 @@ func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(wr, r, nil)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error:", err)
+		return
 	}
 
 	cn := &Conn{
@@ -99,7 +100,8 @@ func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 		for _, client := range w.Socks[pathname] {
 			fmt.Printf("Streaming to %s %s\n", client.ID, pathname)
 			if err = conn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
-				log.Fatal(err)
+				fmt.Println(err)
+				return
 			}
 		}
 
@@ -129,7 +131,7 @@ func (conn *Conn) BandwidthQuotaUsed() uint64 {
 }
 
 func (w *WS) handleDisconnect(conn *Conn, channel string) {
-	fmt.Printf("close %s", conn.ID)
+	fmt.Printf("close %s\n", conn.ID)
 
 	clients := w.Socks[channel]
 
@@ -161,7 +163,8 @@ func (w *WS) createSock(conn *Conn, pathname string, clients []*Conn) []*Conn {
 	fmt.Printf("connected %s %s\n", conn.ID, pathname)
 
 	if err := w.sendConnections(clients); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		return clients
 	}
 
 	return clients
@@ -184,6 +187,7 @@ type ServerMessageConnections struct {
 }
 
 func (w *WS) sendConnections(clients []*Conn) error {
+	errCh := make(chan error, 2)
 	for _, client := range clients {
 		connections := []string{}
 		for _, connection := range clients {
@@ -246,7 +250,8 @@ func (w *WS) sendConnections(clients []*Conn) error {
 
 				bufferWithMime := byteutil.BufferWithMime(vLog.Data, mime)
 				if err = client.Write(bufferWithMime); err != nil {
-					log.Fatal(err)
+					errCh <- err
+					return
 				}
 			}
 		}()
@@ -256,12 +261,18 @@ func (w *WS) sendConnections(clients []*Conn) error {
 			for _, vLog := range messages {
 				bufferWithMime := byteutil.BufferWithMime(vLog.Message, vLog.Mime)
 				if err = client.Write(bufferWithMime); err != nil {
-					log.Fatal(err)
+					errCh <- err
+					return
 				}
 			}
 		}(client)
 
 	}
 
-	return nil
+	select {
+	case err := <-errCh:
+		return err
+	default:
+		return nil
+	}
 }

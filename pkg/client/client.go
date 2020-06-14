@@ -10,12 +10,12 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/streamhut/streamhut/common/byteutil"
 	"github.com/streamhut/streamhut/common/open"
+	"github.com/streamhut/streamhut/pkg/util"
 )
 
 // Client ...
@@ -50,11 +50,9 @@ type ListenConfig struct {
 type StreamConfig struct {
 	Delay   time.Duration
 	Timeout time.Duration
+	Channel string
 	Open    bool
 }
-
-// ErrConnectionRefused ...
-var ErrConnectionRefused = errors.New("ECONNREFUSED")
 
 // Listen ...
 func (c *Client) Listen(config *ListenConfig) error {
@@ -62,6 +60,10 @@ func (c *Client) Listen(config *ListenConfig) error {
 	fmt.Printf("streamhut: connecting to %s\n", u.String())
 	wsclient, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
+		if util.CheckErr(err) == util.ErrConnectionRefused {
+			return fmt.Errorf("Could not connect to %s. Make sure the server is running and the ports are allowed by the firewall.", u.String())
+		}
+
 		return err
 	}
 
@@ -86,7 +88,7 @@ func (c *Client) Stream(config *StreamConfig) error {
 
 	conn, err := net.Dial("tcp", serverURL)
 	if err != nil {
-		if checkErr(err) != ErrConnectionRefused {
+		if util.CheckErr(err) != util.ErrConnectionRefused {
 			return err
 		}
 
@@ -99,6 +101,7 @@ func (c *Client) Stream(config *StreamConfig) error {
 
 	fmt.Printf("streamhut: connecting to %s\n", serverURL)
 
+	channel := config.Channel
 	timeout := config.Timeout
 	delay := config.Delay
 	openURL := config.Open
@@ -107,7 +110,7 @@ func (c *Client) Stream(config *StreamConfig) error {
 		timeout = delay + (5 * time.Second)
 	}
 
-	writer := bufio.NewWriter(conn)
+	tcpWriter := bufio.NewWriter(conn)
 	stdinReader := bufio.NewReader(os.Stdin)
 	reader := bufio.NewReader(conn)
 	ready := false
@@ -120,8 +123,20 @@ func (c *Client) Stream(config *StreamConfig) error {
 		}
 	})
 
+	if channel != "" {
+		_, err = tcpWriter.Write([]byte(fmt.Sprintf("#%s", channel)))
+		if err != nil {
+			return err
+		}
+
+		err = tcpWriter.Flush()
+		if err != nil {
+			return err
+		}
+	}
+
 	go func() {
-		// send to streamhut server
+		// handle user stdin streaming data
 		for {
 			if !ready {
 				continue
@@ -130,29 +145,45 @@ func (c *Client) Stream(config *StreamConfig) error {
 			_, err := stdinReader.Read(line)
 			switch err {
 			case nil:
-				receivedData = true
-				writer.Write(line)
+				if !receivedData {
+					receivedData = true
+				}
+
+				// send out stream data to streamhut server
+				_, err := tcpWriter.Write(line)
+				if err != nil {
+					errChan <- err
+					return
+				}
+
+				err = tcpWriter.Flush()
+				if err != nil {
+					errChan <- err
+					return
+				}
 			case io.EOF:
 				fmt.Println("EOF")
 				errChan <- nil
+				return
 			}
 		}
 	}()
 
 	go func() {
-		// handle responses from streamhut
+		// handle incoming responses from streamhut
 		for {
 			line := make([]byte, 1024)
 			_, err := reader.Read(line)
 			switch err {
 			case nil:
 				lineStr := string(line)
-				if strings.Contains(lineStr, "streaming to") {
-					regex := regexp.MustCompile(`(https?.*)`)
-					matches := regex.FindAllString(lineStr, -1)
-					if len(matches) > 0 {
-						streamURL := matches[0]
-						if openURL {
+
+				if openURL {
+					if strings.Contains(lineStr, "streaming to") {
+						regex := regexp.MustCompile(`(https?.*)`)
+						matches := regex.FindAllString(lineStr, -1)
+						if len(matches) > 0 {
+							streamURL := matches[0]
 							open.URL(streamURL)
 						}
 					}
@@ -187,20 +218,4 @@ func constructWsURI(host string, port uint, channel string, insecure bool) url.U
 		Host:   fmt.Sprintf("%s:%d", host, port),
 		Path:   fmt.Sprintf("/ws/s/%s", channel),
 	}
-}
-
-func checkErr(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if oerr, ok := err.(*net.OpError); ok {
-		if scerr, ok := oerr.Err.(*os.SyscallError); ok {
-			if scerr.Err == syscall.ECONNREFUSED {
-				return ErrConnectionRefused
-			}
-		}
-	}
-
-	return err
 }

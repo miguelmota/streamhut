@@ -50,6 +50,7 @@ type Server struct {
 	cache                  *gocache.Cache
 	bandwidthQuotaLimit    BandwidthQuotaLimit
 	bandwidthQuotaDuration time.Duration
+	randomChannelLength    uint
 }
 
 // Config ...
@@ -61,6 +62,7 @@ type Config struct {
 	ShareBaseURL           string
 	BandwidthQuotaLimit    uint64
 	BandwidthQuotaDuration time.Duration
+	RandomChannelLength    uint
 }
 
 // NewServer ...
@@ -80,6 +82,11 @@ func NewServer(config *Config) *Server {
 		log.Fatal(ErrInvalidQuotaLimit)
 	}
 
+	randomChannelLength := config.RandomChannelLength
+	if randomChannelLength == 0 {
+		log.Fatal("Random channel length must be greater than 0")
+	}
+
 	return &Server{
 		host:                   config.Host,
 		port:                   config.Port,
@@ -89,6 +96,7 @@ func NewServer(config *Config) *Server {
 		cache:                  cache.New(gocache.DefaultExpiration, gocache.DefaultExpiration),
 		bandwidthQuotaLimit:    BandwidthQuotaLimit(config.BandwidthQuotaLimit),
 		bandwidthQuotaDuration: config.BandwidthQuotaDuration,
+		randomChannelLength:    randomChannelLength,
 	}
 }
 
@@ -121,7 +129,7 @@ func (s *Server) Start() error {
 
 func (s *Server) randChannel() string {
 	for {
-		channel := stringutil.RandStringRunes(6)
+		channel := stringutil.RandStringRunes(int(s.randomChannelLength))
 		_, ok := s.ws.Socks[channel]
 		if !ok && common.ValidChannelName(channel) {
 			return channel
@@ -262,7 +270,7 @@ func (s *Server) shareURL(client *wsserver.Conn) string {
 
 	host := s.host
 	if host == "" {
-		host = "127.0.0.1"
+		host = "localhost"
 	}
 
 	hostURL := fmt.Sprintf("http://%s:%d", host, s.port)

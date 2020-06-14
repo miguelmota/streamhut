@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -26,6 +27,9 @@ type Config struct {
 	WS        *wsserver.WS
 	WebTarURL string
 	WebDir    string
+	TLS       bool
+	TLSCert   string
+	TLSKey    string
 }
 
 // Server ...
@@ -34,6 +38,9 @@ type Server struct {
 	ws            *wsserver.WS
 	staticDirPath string
 	webTarURL     string
+	tls           bool
+	tlsCert       string
+	tlsKey        string
 }
 
 // NewServer ...
@@ -53,6 +60,9 @@ func NewServer(config *Config) *Server {
 		ws:            config.WS,
 		webTarURL:     webTarURL,
 		staticDirPath: util.NormalizePath(webDir),
+		tls:           config.TLS,
+		tlsCert:       config.TLSCert,
+		tlsKey:        config.TLSKey,
 	}
 }
 
@@ -81,7 +91,27 @@ func (s *Server) Start() error {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	return srv.ListenAndServe()
+	var err error
+	if s.tls {
+		if s.tlsCert != "" && s.tlsKey != "" {
+			err = srv.ListenAndServeTLS(s.tlsCert, s.tlsKey)
+		} else if s.tlsCert != "" && s.tlsKey == "" {
+			return errors.New("TLS key is required")
+		} else if s.tlsCert == "" && s.tlsKey != "" {
+			return errors.New("TLS certificate is required")
+		}
+	}
+
+	err = srv.ListenAndServe()
+	if err != nil {
+		if util.CheckErr(err) == util.ErrPermissionDenied {
+			return errors.New("Permission denied. Try running with sudo.")
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (s *Server) healthCheckHandler(w http.ResponseWriter, r *http.Request) {

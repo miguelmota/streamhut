@@ -1,4 +1,0 @@
-c689726f3b7a2efeb3258d11f1dc86efadc6fac4e658de0282a6e99fbf785df7  streamhut_0.0.3_Darwin_x86_64.tar.gz
-24e0748e862e878b16767a193e496a155aef04de8be70fdedd0479536757024f  streamhut_0.0.3_Linux_i386.tar.gz
-277feb218489e2182783e5083d687cc18e96a4b3b4652b76fd55147b45eba359  streamhut_0.0.3_Linux_x86_64.tar.gz
-8695bb9807de954163b2cfb33e00ec166be556b5bd0d65137aac0b6c293cbbc4  streamhut_0.0.3_Darwin_i386.tar.gz

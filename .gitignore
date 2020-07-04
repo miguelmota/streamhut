@@ -103,6 +103,7 @@ _archive
 uploads
 tmp
 migration/vendor
+dist
 
 # Files to ignore #
 ###################

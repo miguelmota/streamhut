@@ -87,8 +87,6 @@ func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 		}
 
 		fmt.Println("received data")
-		//console.log('received: %s', data)
-		//console.log(`\n${pathname}\n---${data}---`)
 
 		buffer, mime := byteutil.DecoupleBufferWithMime(msg)
 		go w.db.InsertStreamMessage(&types.StreamMessage{
@@ -97,9 +95,11 @@ func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 			Mime:    mime,
 		})
 
+		//fmt.Printf("%s\n---%s---\n", pathname, string(buffer))
+
 		for _, client := range w.Socks[pathname] {
 			fmt.Printf("Streaming to %s %s\n", client.ID, pathname)
-			if err = conn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
+			if err = client.Write(msg); err != nil {
 				fmt.Println(err)
 				return
 			}

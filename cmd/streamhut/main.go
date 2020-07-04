@@ -265,7 +265,7 @@ For more info, visit: https://github.com/streamhut/streamhut`,
 			})
 
 			return sclient.Listen(&client.ListenConfig{
-				Channel: channel,
+				Channel: listenChannel,
 			})
 		},
 	}

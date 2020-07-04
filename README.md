@@ -21,12 +21,11 @@
 ## Synopsis
 
 - Stream your terminal to anyone without installing anything.
-- Originally created this to quickly share data and files between devices.
 - Path names map to channels.
 - Anyone in the same channel can view what's streamed.
 - Easily self-host your own streamhut server.
 
-Streamhut allows you to stream (pipe) realtime data from your terminal stdout/stderr to a web xterm UI or even to another terminal.
+Streamhut allows you to stream (pipe) realtime data from your terminal stdout/stderr to a web xterm UI or even to another terminal. It also allow you to quickly share data and files between devices.
 
 As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes pre-installed in most *nix systems than you can use streamhut! If you can't install netcat, you may also use the streamhut CLI client.
 

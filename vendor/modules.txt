@@ -1,30 +1,47 @@
-# github.com/fatih/color v1.7.0
+# github.com/creack/pty v1.1.11
+## explicit
+github.com/creack/pty
+# github.com/fatih/color v1.9.0
+## explicit
 github.com/fatih/color
-# github.com/gorilla/mux v1.7.3
+# github.com/gorilla/mux v1.7.4
+## explicit
 github.com/gorilla/mux
-# github.com/gorilla/websocket v1.4.0
+# github.com/gorilla/websocket v1.4.2
+## explicit
 github.com/gorilla/websocket
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/konsorten/go-windows-terminal-sequences v1.0.2
+# github.com/konsorten/go-windows-terminal-sequences v1.0.3
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/kris-nova/lolgopher v0.0.0-20180921204813-313b3abb0d9b
+## explicit
 github.com/kris-nova/lolgopher
-# github.com/mattn/go-colorable v0.1.2
+# github.com/mattn/go-colorable v0.1.4
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.8
+# github.com/mattn/go-isatty v0.0.11
 github.com/mattn/go-isatty
-# github.com/mattn/go-sqlite3 v1.11.0
+# github.com/mattn/go-sqlite3 v0.0.0-00010101000000-000000000000 => github.com/miguelmota/go-sqlite3 v1.14.1-0.20200712070848-bd8c8d9fa5ce
+## explicit
 github.com/mattn/go-sqlite3
 # github.com/patrickmn/go-cache v2.1.0+incompatible
+## explicit
 github.com/patrickmn/go-cache
 # github.com/satori/go.uuid v1.2.0
+## explicit
 github.com/satori/go.uuid
-# github.com/sirupsen/logrus v1.4.2
+# github.com/sirupsen/logrus v1.6.0
+## explicit
 github.com/sirupsen/logrus
-# github.com/spf13/cobra v0.0.5
+# github.com/spf13/cobra v1.0.0
+## explicit
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# golang.org/x/sys v0.0.0-20190812073006-9eafafc0a87e
+# golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+## explicit
+golang.org/x/crypto/ssh/terminal
+# golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
 golang.org/x/sys/unix
+golang.org/x/sys/windows
+# github.com/mattn/go-sqlite3 => github.com/miguelmota/go-sqlite3 v1.14.1-0.20200712070848-bd8c8d9fa5ce

@@ -5,6 +5,8 @@ builds:
   - CGO_ENABLED=0
   main: ./cmd/streamhut/main.go
   binary: streamhut
+  ldflags:
+   - -X github.com/streamhut/streamhut/version.Version={{.Env.VERSION}}
 archives:
   -
     replacements:

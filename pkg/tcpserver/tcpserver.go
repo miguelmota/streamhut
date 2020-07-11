@@ -13,11 +13,8 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	gocache "github.com/patrickmn/go-cache"
 	uuid "github.com/satori/go.uuid"
-	"github.com/streamhut/streamhut/common/byteutil"
-	"github.com/streamhut/streamhut/common/stringutil"
-	common "github.com/streamhut/streamhut/common/util"
+	"github.com/streamhut/streamhut/pkg/byteutil"
 	"github.com/streamhut/streamhut/pkg/db"
 	"github.com/streamhut/streamhut/pkg/util"
 	"github.com/streamhut/streamhut/pkg/wsserver"
@@ -47,7 +44,7 @@ type Server struct {
 	ws                     *wsserver.WS
 	db                     db.DB
 	shareBaseURL           string
-	cache                  *gocache.Cache
+	cache                  *cache.Cache
 	bandwidthQuotaLimit    BandwidthQuotaLimit
 	bandwidthQuotaDuration time.Duration
 	randomChannelLength    uint
@@ -93,7 +90,7 @@ func NewServer(config *Config) *Server {
 		ws:                     config.WS,
 		db:                     config.DB,
 		shareBaseURL:           shareBaseURL,
-		cache:                  cache.New(gocache.DefaultExpiration, gocache.DefaultExpiration),
+		cache:                  cache.New(cache.DefaultExpiration, cache.DefaultExpiration),
 		bandwidthQuotaLimit:    BandwidthQuotaLimit(config.BandwidthQuotaLimit),
 		bandwidthQuotaDuration: config.BandwidthQuotaDuration,
 		randomChannelLength:    randomChannelLength,
@@ -129,9 +126,9 @@ func (s *Server) Start() error {
 
 func (s *Server) randChannel() string {
 	for {
-		channel := stringutil.RandStringRunes(int(s.randomChannelLength))
+		channel := util.RandomChannelName(s.randomChannelLength)
 		_, ok := s.ws.Socks[channel]
-		if !ok && common.ValidChannelName(channel) {
+		if !ok && util.ValidChannelName(channel) {
 			return channel
 		}
 	}
@@ -214,8 +211,8 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 				re := regexp.MustCompile(`#([a-zA-Z0-9]+)\n?\r?`)
 				matches := re.FindAllStringSubmatch(string(line), -1)
 				if len(matches) > 0 && len(matches[0]) > 1 {
-					client.Channel = common.NormalizeChannelName(matches[0][1])
-					if !common.ValidChannelName(client.Channel) {
+					client.Channel = util.NormalizeChannelName(matches[0][1])
+					if !util.ValidChannelName(client.Channel) {
 						msg := fmt.Sprintf("streamhut: channel name %q is not available", client.Channel)
 						client.Netconn.Write([]byte(msg))
 						if err := client.Netconn.Close(); err != nil {

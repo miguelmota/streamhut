@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/streamhut/streamhut/common/byteutil"
-	"github.com/streamhut/streamhut/common/open"
+	"github.com/streamhut/streamhut/pkg/byteutil"
+	"github.com/streamhut/streamhut/pkg/open"
 	"github.com/streamhut/streamhut/pkg/util"
 )
 
@@ -46,12 +46,21 @@ type ListenConfig struct {
 	Channel string
 }
 
+// ListenReadConfig ...
+type ListenReadConfig struct {
+	Channel string
+	Output  *io.PipeWriter
+}
+
 // StreamConfig ...
 type StreamConfig struct {
 	Delay   time.Duration
 	Timeout time.Duration
 	Channel string
 	Open    bool
+	//Stdin   *bufio.Reader
+	Stdin *io.PipeReader
+	Echo  bool
 }
 
 // Listen ...
@@ -61,11 +70,27 @@ func (c *Client) Listen(config *ListenConfig) error {
 	wsclient, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		if util.CheckErr(err) == util.ErrConnectionRefused {
-			return fmt.Errorf("Could not connect to %s. Make sure the server is running and the ports are allowed by the firewall.", u.String())
+			return fmt.Errorf("could not connect to %s. Make sure the server is running and the ports are allowed by the firewall", u.String())
 		}
 
 		return err
 	}
+
+	/*
+		inStream := new(bytes.Buffer)
+		w := bufio.NewWriter(inStream)
+
+		go func() {
+			err := term.NewTerm(&term.Config{
+				Command:           "bash",
+				InputToSendToTerm: inStream,
+			})
+
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+	*/
 
 	defer wsclient.Close()
 	fmt.Printf("streamhut: listening on channel %q\n", config.Channel)
@@ -77,7 +102,38 @@ func (c *Client) Listen(config *ListenConfig) error {
 		}
 		data, mime := byteutil.DecoupleBufferWithMime(message)
 		if mime == "shell" {
+			//w.Write(data)
+			//w.Flush()
 			os.Stdout.Write(data)
+		}
+	}
+}
+
+// ListenRead ...
+func (c *Client) ListenRead(config *ListenReadConfig) error {
+	u := constructWsURI(c.host, c.port, config.Channel, c.insecure)
+	wsclient, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		if util.CheckErr(err) == util.ErrConnectionRefused {
+			return fmt.Errorf("could not connect to %s. Make sure the server is running and the ports are allowed by the firewall", u.String())
+		}
+
+		return err
+	}
+
+	w := config.Output
+
+	defer wsclient.Close()
+	fmt.Printf("streamhut: listening on channel %q\n", config.Channel)
+
+	for {
+		_, message, err := wsclient.ReadMessage()
+		if err != nil {
+			return err
+		}
+		data, mime := byteutil.DecoupleBufferWithMime(message)
+		if mime == "shell-stdin" {
+			w.Write(data)
 		}
 	}
 }
@@ -111,7 +167,7 @@ func (c *Client) Stream(config *StreamConfig) error {
 	}
 
 	tcpWriter := bufio.NewWriter(conn)
-	stdinReader := bufio.NewReader(os.Stdin)
+	stdinReader := config.Stdin
 	reader := bufio.NewReader(conn)
 	ready := false
 
@@ -166,6 +222,7 @@ func (c *Client) Stream(config *StreamConfig) error {
 				errChan <- nil
 				return
 			}
+
 		}
 	}()
 
@@ -189,7 +246,9 @@ func (c *Client) Stream(config *StreamConfig) error {
 					}
 				}
 
-				fmt.Print(lineStr)
+				if config.Echo {
+					fmt.Print(lineStr)
+				}
 				if !ready {
 					time.Sleep(delay)
 					fmt.Println()

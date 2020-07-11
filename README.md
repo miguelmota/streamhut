@@ -39,13 +39,21 @@ As long as you have [`netcat`](https://en.wikipedia.org/wiki/Netcat) which comes
 
 ## Getting Started (without installing anything)
 
-One liner to stream your terminal:
+**One liner to stream your terminal:**
 
 ```bash
-$ exec > >(nc stream.ht 1337) 2>&1
+$ exec &> >(nc stream.ht 1337)
 ```
 
-Example of streaming tail of file:
+The above command pipes stdout and stderr of new bash shell to streamhut.
+
+**Stream to a custom channel name:**
+
+```bash
+$ exec &> >(nc stream.ht 1337);echo \#mychannel
+```
+
+**Example of streaming tail of file:**
 
 ```bash
 # terminal 1
@@ -57,26 +65,26 @@ $ cat > data.txt
 $ tail -F data.txt | nc stream.ht 1337
 ```
 
-Stream the current date every second:
+**Stream the current date every second:**
 
 ```bash
 $ while true; do date; sleep 1; done | nc stream.ht 1337
 ```
 
-Stream output of a program (delay is required to see share url):
+**Stream output of a program (delay is required to see share url):**
 
 ```bash
 $ (sleep 5; htop) | nc stream.ht 1337
 # waits 5 seconds, and then send contents of program.
 ```
 
-Example of piping to both stdout and netcat:
+**Example of piping a program to both stdout and streamhut:**
 
 ```bash
 $ (echo -n; sleep 5; htop) | tee >(nc stream.ht 1337)
 ```
 
-Don't have netcat available? Pipe to a file descriptor with an open TCP connection:
+**Don't have netcat available?** Pipe to a file descriptor with an open TCP connection:
 
 ```bash
 $ exec 3<>/dev/tcp/stream.ht/1337 && head -1 <&3 && exec &> >(tee >(cat >&3))
@@ -115,7 +123,7 @@ $ htop | streamhut -o
 Stream to different server:
 
 ```bash
-$ htop | streamhut -h localhost -p 1337
+$ htop | streamhut -h example.com -p 1337
 ```
 
 Stream to custom channel:
@@ -136,7 +144,7 @@ HTTP/WebSocket port: 8080
 TCP port: 1337
 ```
 
-Run server with TLS/SSL:
+Run server with SSL/TLS:
 
 ```bash
 $ mkcert localhost
@@ -146,19 +154,14 @@ $ sudo streamhut server --tls --tls-cert=localhost.pem --tls-key=localhost-key.p
 
 For more options, run `streamhut server --help`
 
-#### Listening on a channel
+#### Connecting to a channel
 
 ```bash
 # terminal 1
-$ streamhut listen -h localhost -p 8080 -i -c yo
+$ streamhut connect -c mychannel
 ```
 
-```bash
-# terminal 2
-$ exec > >(nc localhost 1337) 2>&1;echo \#yo
-```
-
-For more options, run `streamhut listen --help`
+For more options, run `streamhut connect --help`
 
 ## Docker
 
@@ -197,6 +200,10 @@ Run migrations:
 make migrate
 ```
 
+## Web App
+
+The web app source code is found on [https://github.com/streamhut/web](https://github.com/streamhut/web).
+
 ## FAQ
 
 - Q: How is the stream log data stored?
@@ -214,12 +221,16 @@ make migrate
     Example:
 
     ```bash
-    exec > >(nc stream.ht 1337) 2>&1;echo \#mychannel
+    exec &> >(nc stream.ht 1337);echo \#mychannel
     ```
 
 - Q: What's the difference between _stream.ht_ and _streamhut.io_?
 
   - A: The domain _stream.ht_ is an alias for _streamhut.io_, meaning you can type _stream.ht_ as the domain for convenience. Other aliases are _streamhut.net_ and _streamhut.org_.
+
+- Q: What is the difference between `exec > >(nc stream.ht 1337) 2>&1` and `exec &> >(nc stream.ht 1337)`
+
+  - A: They are the same in that they both stream stdout and stderr to the server.
 
 ## License
 

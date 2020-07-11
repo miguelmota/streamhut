@@ -11,7 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	uuid "github.com/satori/go.uuid"
-	"github.com/streamhut/streamhut/common/byteutil"
+	"github.com/streamhut/streamhut/pkg/byteutil"
 	"github.com/streamhut/streamhut/pkg/db"
 	"github.com/streamhut/streamhut/types"
 )
@@ -94,8 +94,6 @@ func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 			Message: buffer,
 			Mime:    mime,
 		})
-
-		//fmt.Printf("%s\n---%s---\n", pathname, string(buffer))
 
 		for _, client := range w.Socks[pathname] {
 			fmt.Printf("Streaming to %s %s\n", client.ID, pathname)
@@ -216,7 +214,7 @@ func (w *WS) sendConnections(clients []*Conn) error {
 
 		go func() {
 			// TODO: read from ws settings
-			play := true
+			play := false
 			logs := w.db.ReadStreamLogs(client.Channel)
 			for i, vLog := range logs {
 				mime := "shell"
@@ -248,10 +246,12 @@ func (w *WS) sendConnections(clients []*Conn) error {
 					*/
 				}
 
-				bufferWithMime := byteutil.BufferWithMime(vLog.Data, mime)
-				if err = client.Write(bufferWithMime); err != nil {
-					errCh <- err
-					return
+				if mime != "shell-stdin" {
+					bufferWithMime := byteutil.BufferWithMime(vLog.Data, mime)
+					if err = client.Write(bufferWithMime); err != nil {
+						errCh <- err
+						return
+					}
 				}
 			}
 		}()
@@ -259,10 +259,12 @@ func (w *WS) sendConnections(clients []*Conn) error {
 		go func(client *Conn) {
 			messages := w.db.ReadStreamMessages(client.Channel)
 			for _, vLog := range messages {
-				bufferWithMime := byteutil.BufferWithMime(vLog.Message, vLog.Mime)
-				if err = client.Write(bufferWithMime); err != nil {
-					errCh <- err
-					return
+				if vLog.Mime != "shell-stdin" {
+					bufferWithMime := byteutil.BufferWithMime(vLog.Message, vLog.Mime)
+					if err = client.Write(bufferWithMime); err != nil {
+						errCh <- err
+						return
+					}
 				}
 			}
 		}(client)

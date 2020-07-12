@@ -93,7 +93,7 @@ $ exec 3<>/dev/tcp/stream.ht/1337 && head -1 <&3 && exec &> >(tee >(cat >&3))
 ## Install
 
 ```bash
-$ go get github.com/streamhut/streamhut/cmd/streamhut
+$ go get github.com/streamhut/streamhut
 ```
 
 ## CLI

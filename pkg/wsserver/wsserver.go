@@ -89,11 +89,13 @@ func (w *WS) Handler(wr http.ResponseWriter, r *http.Request) {
 		fmt.Println("received data")
 
 		buffer, mime := byteutil.DecoupleBufferWithMime(msg)
-		go w.db.InsertStreamMessage(&types.StreamMessage{
-			Channel: cn.Channel,
-			Message: buffer,
-			Mime:    mime,
-		})
+		if w.db != nil {
+			go w.db.InsertStreamMessage(&types.StreamMessage{
+				Channel: cn.Channel,
+				Message: buffer,
+				Mime:    mime,
+			})
+		}
 
 		for _, client := range w.Socks[pathname] {
 			fmt.Printf("Streaming to %s %s\n", client.ID, pathname)
@@ -213,6 +215,10 @@ func (w *WS) sendConnections(clients []*Conn) error {
 		}
 
 		go func() {
+			if w.db == nil {
+				return
+			}
+
 			// TODO: read from ws settings
 			play := false
 			logs := w.db.ReadStreamLogs(client.Channel)
@@ -257,6 +263,10 @@ func (w *WS) sendConnections(clients []*Conn) error {
 		}()
 
 		go func(client *Conn) {
+			if w.db == nil {
+				return
+			}
+
 			messages := w.db.ReadStreamMessages(client.Channel)
 			for _, vLog := range messages {
 				if vLog.Mime != "shell-stdin" {

@@ -5,5 +5,6 @@ COPY . /go/src/github.com/streamhut/streamhut
 WORKDIR /go/src/github.com/streamhut/streamhut
 
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o streamhut cmd/streamhut/main.go
-
-CMD ["./streamhut", "server"]
+RUN mv streamhut /bin/streamhut
+ENTRYPOINT ["streamhut"]
+CMD ["server"]

@@ -235,10 +235,12 @@ func (s *Server) handleRequest(client *wsserver.Conn) {
 		mime := "shell"
 		bufferWithMime := byteutil.BufferWithMime(line, mime)
 
-		go s.db.InsertStreamLog(&types.StreamLog{
-			Channel: client.Channel,
-			Data:    line,
-		})
+		if s.db != nil {
+			go s.db.InsertStreamLog(&types.StreamLog{
+				Channel: client.Channel,
+				Data:    line,
+			})
+		}
 
 		clients, ok := s.ws.Socks[client.Channel]
 		if ok {

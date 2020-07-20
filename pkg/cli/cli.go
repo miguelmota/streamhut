@@ -207,6 +207,7 @@ func serverCommand() *cobra.Command {
 	var humanBandwidthQuotaLimit string
 	var humanBandwidthQuotaDuration string
 	var randomChannelLength uint
+	var noStorage bool
 
 	serverCmd := &cobra.Command{
 		Use:   "server",
@@ -221,10 +222,12 @@ func serverCommand() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var db db.DB
-			if dbType == "sqlite3" {
-				db = sqlite3db.NewDB(&sqlite3db.Config{
-					DBPath: dbPath,
-				})
+			if !noStorage {
+				if dbType == "sqlite3" {
+					db = sqlite3db.NewDB(&sqlite3db.Config{
+						DBPath: dbPath,
+					})
+				}
 			}
 
 			ws := wsserver.NewWS(&wsserver.Config{
@@ -282,13 +285,17 @@ func serverCommand() *cobra.Command {
 			lolwriter := lol.NewTruecolorLolWriter()
 			lolwriter.Write([]byte(asciiart.Hut()))
 			fmt.Println("\nStarting server...")
-			green.Printf("HTTP/WebSocket port (web): %d\n", server.Port())
-			green.Printf("TCP port (streaming): %d\n", tcpServer.Port())
 
 			if tcpServer.BandwidthQuotaEnabled() {
 				yellow.Printf("Bandwidth quota limit: %s\n", tcpServer.BandwidthQuotaLimit().String())
 				yellow.Printf("Bandwidth quota duration: %s\n", tcpServer.BandwidthQuotaDuration().String())
 			}
+			if noStorage {
+				yellow.Println("Storage disabled")
+			}
+
+			green.Printf("HTTP/WebSocket port (web): %d\n", server.Port())
+			green.Printf("TCP port (streaming): %d\n", tcpServer.Port())
 
 			err := server.Start()
 			if err != nil {
@@ -351,6 +358,7 @@ func serverCommand() *cobra.Command {
 	serverCmd.Flags().StringVarP(&tlsKey, "tls-key", "", "", "TLS key file path")
 	serverCmd.Flags().StringVarP(&webDir, "web-dir", "", httpserver.DefaultWebDir, "Web app directory")
 	serverCmd.Flags().StringVarP(&webTarURL, "web-tar-url", "", httpserver.DefaultWebTarURL, "Web app tarball url to download")
+	serverCmd.Flags().BoolVarP(&noStorage, "no-storage", "", false, "Set true to disable storage")
 
 	return serverCmd
 }

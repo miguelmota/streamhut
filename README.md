@@ -208,7 +208,7 @@ The web app source code is found on [https://github.com/streamhut/web](https://g
 
 - Q: How is the stream log data stored?
 
-  - A: Currently it's stored in a local sqlite3 database. More robust and scalable options are in the works.
+  - A: Currently it's stored in a local sqlite3 database. You can disable storage with the `--no-storage` flag, e.g. `streamhut server --no-storage`.
 
 - Q: What happened to the streamhut NPM module?
 

@@ -33,6 +33,6 @@ rake db:migrate
 
 ## FAQ
 
-- Q: Why are you using a ruby gem in a node application?
+- Q: Why are you using a ruby gem in a Go application?
 
   - A: [standalone_migrations](https://github.com/thuss/standalone-migrations) is non-rails specific and by far the smoothest tool for database migrations I've come across.

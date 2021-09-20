@@ -7,6 +7,7 @@ WORKDIR /go/src/github.com/streamhut/streamhut
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o streamhut cmd/streamhut/main.go
 
 FROM alpine:3.9
+COPY --from=build /etc/ssl/certs /etc/ssl/certs
 COPY --from=build /go/src/github.com/streamhut/streamhut/streamhut /bin/streamhut
 ENTRYPOINT ["streamhut"]
 CMD ["server"]

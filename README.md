@@ -235,3 +235,5 @@ The web app source code is found on [https://github.com/streamhut/web](https://g
 ## License
 
 Released under the [Apache 2.0](./LICENSE) license.
+
+© [Miguel Mota](https://github.com/miguelmota)
